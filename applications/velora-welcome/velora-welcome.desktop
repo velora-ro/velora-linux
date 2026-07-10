@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Velora Welcome
+Comment=Welcome to Velora Linux
+Exec=/usr/local/bin/velora-welcome
+Icon=velora-welcome
+Terminal=false
+Type=Application
+Categories=System;
+X-GNOME-Autostart-enabled=true

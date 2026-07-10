@@ -1,0 +1,80 @@
+# ============================================================
+#  Velora Linux - Package List
+#  All packages installed in the live system
+# ============================================================
+
+# === DESKTOP - KDE Plasma ===
+kde-plasma-desktop
+plasma-workspace
+plasma-nm
+plasma-pa
+plasma-systemmonitor
+kscreen
+kde-spectacle
+dolphin
+konsole
+ark
+kate
+okular
+gwenview
+kcalc
+kdeconnect
+sddm
+sddm-theme-breeze
+
+# === SYSTEM ===
+calamares
+calamares-settings-debian
+network-manager
+network-manager-gnome
+bluetooth
+blueman
+cups
+system-config-printer
+gparted
+timeshift
+fastfetch
+htop
+wget
+curl
+git
+zip
+unzip
+p7zip-full
+flatpak
+plasma-discover
+plasma-discover-backend-flatpak
+
+# === MULTIMEDIA ===
+vlc
+obs-studio
+kdenlive
+gimp
+ffmpeg
+
+# === OFFICE ===
+libreoffice
+libreoffice-l10n-ro
+
+# === BROWSER ===
+firefox-esr
+
+# === GAMING ===
+steam
+wine
+wine32
+wine64
+winetricks
+lutris
+gamemode
+mangohud
+
+# === FONTS ===
+fonts-inter
+fonts-noto
+fonts-noto-color-emoji
+
+# === VELORA APPS (added manually after build) ===
+# python3
+# python3-pip
+# pyside6 (via pip in venv)

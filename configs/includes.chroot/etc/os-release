@@ -1,0 +1,11 @@
+NAME="Velora Linux"
+VERSION="1.0"
+ID=velora
+ID_LIKE=debian
+PRETTY_NAME="Velora Linux 1.0"
+VERSION_ID="1.0"
+HOME_URL="https://github.com/velora-ro/velora-linux"
+SUPPORT_URL="https://github.com/velora-ro/velora-linux/issues"
+BUG_REPORT_URL="https://github.com/velora-ro/velora-linux/issues"
+VERSION_CODENAME="nature"
+VELORA_VERSION="1.0"

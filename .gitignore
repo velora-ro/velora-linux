@@ -1,0 +1,15 @@
+# Build output
+build/
+build.log
+iso/*.iso
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# System
+.DS_Store
+Thumbs.db
