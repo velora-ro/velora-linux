@@ -75,10 +75,12 @@ Rectangle {
             spacing: 0
 
             // Logo
-            Text {
+            Image {
                 Layout.alignment: Qt.AlignHCenter
-                text: "🌲"
-                font.pixelSize: 52
+                source: "logo.png"
+                width: 64
+                height: 64
+                fillMode: Image.PreserveAspectFit
                 Layout.bottomMargin: 8
             }
 

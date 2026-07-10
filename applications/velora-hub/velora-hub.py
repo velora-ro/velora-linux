@@ -549,10 +549,20 @@ class VeloraHub(QMainWindow):
         sidebar_layout.setSpacing(4)
 
         # Logo
-        logo = QLabel("🌲 Velora Hub")
-        logo.setFont(QFont("Inter", 15, QFont.Weight.Bold))
-        logo.setStyleSheet(f"color: {C_HIGHLIGHT}; padding: 0 8px 16px 8px;")
-        sidebar_layout.addWidget(logo)
+        logo_row = QHBoxLayout()
+        logo_row.setContentsMargins(8, 0, 8, 16)
+        logo_img = QLabel()
+        logo_pixmap = QPixmap("/usr/share/velora/logo.png")
+        if not logo_pixmap.isNull():
+            logo_img.setPixmap(logo_pixmap.scaled(28, 28, Qt.AspectRatioMode.KeepAspectRatio,
+                                                   Qt.TransformationMode.SmoothTransformation))
+        logo_text_lbl = QLabel("Velora Hub")
+        logo_text_lbl.setFont(QFont("Inter", 15, QFont.Weight.Bold))
+        logo_text_lbl.setStyleSheet(f"color: {C_HIGHLIGHT};")
+        logo_row.addWidget(logo_img)
+        logo_row.addWidget(logo_text_lbl)
+        logo_row.addStretch()
+        sidebar_layout.addLayout(logo_row)
 
         # Nav buttons
         self.nav_buttons = []

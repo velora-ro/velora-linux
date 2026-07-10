@@ -162,8 +162,14 @@ class PageWelcome(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.setSpacing(18)
 
-        logo = QLabel("🌲")
-        logo.setFont(QFont("Segoe UI Emoji", 72))
+        logo = QLabel()
+        logo_pixmap = QPixmap("/usr/share/velora/logo.png")
+        if not logo_pixmap.isNull():
+            logo.setPixmap(logo_pixmap.scaled(80, 80, Qt.AspectRatioMode.KeepAspectRatio,
+                                               Qt.TransformationMode.SmoothTransformation))
+        else:
+            logo.setText("🌲")
+            logo.setFont(QFont("Segoe UI Emoji", 72))
         logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         title = QLabel("Welcome to Velora Linux")
@@ -575,9 +581,15 @@ class PageFinish(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.setSpacing(18)
 
-        icon = QLabel("🌲")
-        icon.setFont(QFont("Segoe UI Emoji", 72))
-        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        logo = QLabel()
+        logo_pixmap = QPixmap("/usr/share/velora/logo.png")
+        if not logo_pixmap.isNull():
+            logo.setPixmap(logo_pixmap.scaled(80, 80, Qt.AspectRatioMode.KeepAspectRatio,
+                                               Qt.TransformationMode.SmoothTransformation))
+        else:
+            logo.setText("🌲")
+            logo.setFont(QFont("Segoe UI Emoji", 72))
+        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         title = QLabel("Welcome to Velora Linux!")
         title.setFont(QFont("Inter", 30, QFont.Weight.Bold))
