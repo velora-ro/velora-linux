@@ -33,9 +33,28 @@ mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
 echo "[*] Configuring live-build..."
+
+# Detect if we're on Ubuntu or Debian
+if grep -qi ubuntu /etc/os-release 2>/dev/null; then
+    DISTRO="jammy"
+    MIRROR="http://archive.ubuntu.com/ubuntu/"
+    MIRROR_BOOTSTRAP="http://archive.ubuntu.com/ubuntu/"
+    ARCHIVE_AREAS="main restricted universe multiverse"
+else
+    DISTRO="bookworm"
+    MIRROR="http://deb.debian.org/debian/"
+    MIRROR_BOOTSTRAP="http://deb.debian.org/debian/"
+    ARCHIVE_AREAS="main contrib non-free non-free-firmware"
+fi
+
+echo "[*] Detected distribution base: $DISTRO"
+
 lb config \
-    --distribution bookworm \
-    --archive-areas "main contrib non-free non-free-firmware" \
+    --distribution "$DISTRO" \
+    --mirror-bootstrap "$MIRROR_BOOTSTRAP" \
+    --mirror-chroot "$MIRROR" \
+    --mirror-binary "$MIRROR" \
+    --archive-areas "$ARCHIVE_AREAS" \
     --debian-installer none \
     --binary-images iso-hybrid \
     --bootappend-live "boot=live components quiet splash" \
