@@ -55,7 +55,6 @@ lb config \
     --mirror-chroot "$MIRROR" \
     --mirror-binary "$MIRROR" \
     --archive-areas "$ARCHIVE_AREAS" \
-    --debian-installer none \
     --binary-images iso-hybrid \
     --bootappend-live "boot=live components quiet splash" \
     --iso-volume "Velora Linux ${VELORA_VERSION}" \
