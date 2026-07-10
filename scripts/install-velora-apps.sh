@@ -57,4 +57,15 @@ chmod +x /usr/local/bin/velora-drivers
 cp "$REPO_DIR/applications/velora-drivers/velora-drivers.desktop" \
    /usr/share/applications/velora-drivers.desktop
 
+echo "[velora-apps] Installing Velora Store..."
+cp -r "$REPO_DIR/applications/velora-store" "$APPS_DIR/"
+
+cat > /usr/local/bin/velora-store << EOF
+#!/bin/bash
+/opt/velora/venv/bin/python3 /opt/velora/velora-store/velora-store.py
+EOF
+chmod +x /usr/local/bin/velora-store
+cp "$REPO_DIR/applications/velora-store/velora-store.desktop" \
+   /usr/share/applications/velora-store.desktop
+
 echo "[velora-apps] Done."
