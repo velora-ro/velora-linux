@@ -1,0 +1,11 @@
+[Colors]
+ButtonBackgroundColor=30,40,35
+ButtonTextColor=210,230,220
+ButtonHoverColor=47,107,82
+ButtonFocusColor=47,107,82
+
+[Theme]
+defaultWallpaperTheme=Velora
+defaultWallpaperSuffix=.png
+defaultWallpaperWidth=1920
+defaultWallpaperHeight=1080

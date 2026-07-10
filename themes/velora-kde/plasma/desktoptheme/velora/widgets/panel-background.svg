@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+  <defs>
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+  </defs>
+  <!-- Glass panel - dark green with transparency, iOS 26 style -->
+  <rect width="100" height="100" rx="16" ry="16"
+        fill="rgba(15,25,20,0.75)"
+        filter="url(#blur)"/>
+  <!-- Subtle top highlight like iOS glass -->
+  <rect width="100" height="1" rx="0"
+        fill="rgba(137,193,125,0.15)"/>
+</svg>

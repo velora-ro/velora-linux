@@ -27,6 +27,7 @@ run_script "install-gaming.sh"
 run_script "install-flatpak.sh"
 run_script "install-velora-apps.sh"
 run_script "install-branding.sh"
+run_script "install-theme.sh"
 
 echo "================================"
 echo "✅ Velora Linux installed!"
