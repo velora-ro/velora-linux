@@ -21,6 +21,7 @@ run_script() {
 }
 
 run_script "install-base.sh"
+run_script "install-calamares.sh"
 run_script "install-kde.sh"
 run_script "install-wine.sh"
 run_script "install-gaming.sh"

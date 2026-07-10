@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Install Velora Linux
+Comment=Install Velora Linux to your computer
+Exec=pkexec calamares
+Icon=/usr/share/velora/logo.png
+Terminal=false
+Type=Application
+Categories=System;
+X-Desktop-File-Install-Version=0.26
