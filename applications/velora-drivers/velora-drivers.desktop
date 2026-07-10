@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Velora Driver Manager
+Comment=Manage hardware drivers on Velora Linux
+Exec=/usr/local/bin/velora-drivers
+Icon=velora-drivers
+Terminal=false
+Type=Application
+Categories=System;HardwareSettings;
+Keywords=drivers;nvidia;amd;intel;wifi;hardware;

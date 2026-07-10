@@ -46,4 +46,15 @@ chmod +x /usr/local/bin/velora-update
 cp "$REPO_DIR/applications/velora-update/velora-update.desktop" \
    /usr/share/applications/velora-update.desktop
 
+echo "[velora-apps] Installing Velora Driver Manager..."
+cp -r "$REPO_DIR/applications/velora-drivers" "$APPS_DIR/"
+
+cat > /usr/local/bin/velora-drivers << EOF
+#!/bin/bash
+pkexec /opt/velora/venv/bin/python3 /opt/velora/velora-drivers/velora-drivers.py
+EOF
+chmod +x /usr/local/bin/velora-drivers
+cp "$REPO_DIR/applications/velora-drivers/velora-drivers.desktop" \
+   /usr/share/applications/velora-drivers.desktop
+
 echo "[velora-apps] Done."
