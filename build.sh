@@ -68,6 +68,11 @@ echo "[*] Copying package lists..."
 cp -r ../configs/packages.chroot config/package-lists/
 cp -r ../configs/includes.chroot config/includes.chroot/ 2>/dev/null || true
 
+echo "[*] Copying hooks..."
+mkdir -p config/hooks/normal
+cp -r ../configs/hooks/normal/. config/hooks/normal/ 2>/dev/null || true
+chmod +x config/hooks/normal/*.hook.chroot 2>/dev/null || true
+
 echo "[*] Starting build (this will take a while)..."
 echo ""
 sudo lb build 2>&1 | tee ../build.log
