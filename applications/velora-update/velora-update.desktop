@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Velora Update
+Comment=Keep Velora Linux up to date
+Exec=/usr/local/bin/velora-update
+Icon=velora-update
+Terminal=false
+Type=Application
+Categories=System;
+Keywords=update;upgrade;packages;security;

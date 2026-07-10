@@ -32,8 +32,18 @@ cat > /usr/local/bin/velora-hub << EOF
 /opt/velora/venv/bin/python3 /opt/velora/velora-hub/velora-hub.py
 EOF
 chmod +x /usr/local/bin/velora-hub
-
 cp "$REPO_DIR/applications/velora-hub/velora-hub.desktop" \
    /usr/share/applications/velora-hub.desktop
+
+echo "[velora-apps] Installing Velora Update..."
+cp -r "$REPO_DIR/applications/velora-update" "$APPS_DIR/"
+
+cat > /usr/local/bin/velora-update << EOF
+#!/bin/bash
+pkexec /opt/velora/venv/bin/python3 /opt/velora/velora-update/velora-update.py
+EOF
+chmod +x /usr/local/bin/velora-update
+cp "$REPO_DIR/applications/velora-update/velora-update.desktop" \
+   /usr/share/applications/velora-update.desktop
 
 echo "[velora-apps] Done."
