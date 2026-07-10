@@ -15,15 +15,25 @@ python3 -m venv "$APPS_DIR/venv"
 echo "[velora-apps] Installing Velora Welcome..."
 cp -r "$REPO_DIR/applications/velora-welcome" "$APPS_DIR/"
 
-# Create launcher script
 cat > /usr/local/bin/velora-welcome << EOF
 #!/bin/bash
 /opt/velora/venv/bin/python3 /opt/velora/velora-welcome/velora-welcome.py
 EOF
 chmod +x /usr/local/bin/velora-welcome
 
-# Autostart on first boot
 cp "$REPO_DIR/applications/velora-welcome/velora-welcome.desktop" \
    /etc/xdg/autostart/velora-welcome.desktop
+
+echo "[velora-apps] Installing Velora Hub..."
+cp -r "$REPO_DIR/applications/velora-hub" "$APPS_DIR/"
+
+cat > /usr/local/bin/velora-hub << EOF
+#!/bin/bash
+/opt/velora/venv/bin/python3 /opt/velora/velora-hub/velora-hub.py
+EOF
+chmod +x /usr/local/bin/velora-hub
+
+cp "$REPO_DIR/applications/velora-hub/velora-hub.desktop" \
+   /usr/share/applications/velora-hub.desktop
 
 echo "[velora-apps] Done."

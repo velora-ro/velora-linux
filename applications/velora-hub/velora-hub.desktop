@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Velora Hub
+Comment=Velora Linux System Management Center
+Exec=/usr/local/bin/velora-hub
+Icon=velora-hub
+Terminal=false
+Type=Application
+Categories=System;Settings;
+Keywords=drivers;gaming;wine;updates;backup;system;
