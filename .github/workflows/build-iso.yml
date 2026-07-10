@@ -1,0 +1,41 @@
+name: Build Velora Linux ISO
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:   # permite declansare manuala din GitHub UI
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install live-build
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y live-build xorriso isolinux
+
+      - name: Make build.sh executable
+        run: chmod +x build.sh
+
+      - name: Build Velora Linux ISO
+        run: sudo bash build.sh
+
+      - name: Upload ISO as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VeloraLinux-1.0
+          path: iso/VeloraLinux-1.0.iso
+          retention-days: 7
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          retention-days: 3
