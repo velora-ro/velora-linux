@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Velora Plymouth
+Description=Velora Linux boot animation - Forest Green pulse
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/velora-plymouth
+ScriptFile=/usr/share/plymouth/themes/velora-plymouth/velora-plymouth.script

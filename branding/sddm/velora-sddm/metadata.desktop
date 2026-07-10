@@ -1,0 +1,10 @@
+[SddmGreeterTheme]
+Name=Velora SDDM
+Description=Velora Linux login screen - Forest Green glass card
+Author=Velora
+AuthorEmail=velora.official.ro@gmail.com
+License=Proprietary
+Type=sddm-theme
+Version=1.0
+Website=https://github.com/velora-ro/velora-linux
+Screenshot=preview.png

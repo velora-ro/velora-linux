@@ -1,0 +1,75 @@
+# ============================================================
+#  Velora Linux - GRUB Theme
+#  Forest Green, minimal, iOS 26 inspired
+# ============================================================
+
+title-text: ""
+desktop-color: "#0a1510"
+desktop-image: "background.png"
+
+# ── Boot menu ────────────────────────────────────────────────
++ boot_menu {
+    left          = 50%-200
+    top           = 45%
+    width         = 400
+    height        = 200
+    item_font     = "Inter Regular 14"
+    item_color    = "#7A9E87"
+    selected_item_font  = "Inter Bold 14"
+    selected_item_color = "#89C17D"
+    selected_item_pixmap_style = "select_*.png"
+    item_height   = 40
+    item_padding  = 16
+    item_spacing  = 4
+    scrollbar     = false
+}
+
+# ── Title ────────────────────────────────────────────────────
++ label {
+    left   = 50%-200
+    top    = 30%
+    width  = 400
+    height = 60
+    text   = "🌲 Velora Linux"
+    font   = "Inter Bold 28"
+    color  = "#D2EBD8"
+    align  = "center"
+}
+
++ label {
+    left   = 50%-200
+    top    = 37%
+    width  = 400
+    height = 30
+    text   = "Modern. Natural. Elegant."
+    font   = "Inter Regular 13"
+    color  = "#5F9E6E"
+    align  = "center"
+}
+
+# ── Progress bar ─────────────────────────────────────────────
++ progress_bar {
+    id    = "__timeout__"
+    left  = 50%-150
+    top   = 85%
+    width = 300
+    height = 6
+    show_text     = false
+    bar_style     = "progress_bar_*.png"
+    highlight_style = "progress_bar_hl_*.png"
+    bg_color      = "rgba(255,255,255,0.08)"
+    fg_color      = "#2F6B52"
+    border_color  = "rgba(0,0,0,0)"
+}
+
+# ── Version label ─────────────────────────────────────────────
++ label {
+    left   = 50%-200
+    top    = 88%
+    width  = 400
+    height = 20
+    text   = "Velora Linux 1.0"
+    font   = "Inter Regular 11"
+    color  = "#3a6e52"
+    align  = "center"
+}

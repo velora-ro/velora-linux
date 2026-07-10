@@ -1,0 +1,84 @@
+# ============================================================
+#  Velora Plymouth Boot Animation
+#  Pulsing green circle + Velora text
+# ============================================================
+
+# ── Background ───────────────────────────────────────────────
+Window.SetBackgroundTopColor(0.039, 0.082, 0.063);    # #0a1510
+Window.SetBackgroundBottomColor(0.059, 0.122, 0.090); # #0f1f17
+
+# ── Logo (text-based, no image needed) ───────────────────────
+logo_text = Image.Text("🌲 Velora Linux", 1.0, 1.0, 1.0, 1);
+logo_sprite = Sprite(logo_text);
+logo_sprite.SetX(Window.GetWidth() / 2 - logo_text.GetWidth() / 2);
+logo_sprite.SetY(Window.GetHeight() / 2 - logo_text.GetHeight() / 2 - 60);
+logo_sprite.SetZ(10);
+
+# Subtitle
+sub_text = Image.Text("Modern. Natural. Elegant.", 0.369, 0.620, 0.431, 1);
+sub_sprite = Sprite(sub_text);
+sub_sprite.SetX(Window.GetWidth() / 2 - sub_text.GetWidth() / 2);
+sub_sprite.SetY(Window.GetHeight() / 2 - sub_text.GetHeight() / 2 - 20);
+sub_sprite.SetZ(10);
+
+# ── Progress bar ─────────────────────────────────────────────
+BAR_WIDTH  = 300;
+BAR_HEIGHT = 4;
+BAR_X      = Window.GetWidth() / 2 - BAR_WIDTH / 2;
+BAR_Y      = Window.GetHeight() / 2 + 60;
+
+# Background track
+bar_bg = Image(BAR_WIDTH, BAR_HEIGHT);
+bar_bg.Scale(BAR_WIDTH, BAR_HEIGHT);
+bar_bg_sprite = Sprite(bar_bg);
+bar_bg_sprite.SetX(BAR_X);
+bar_bg_sprite.SetY(BAR_Y);
+bar_bg_sprite.SetZ(10);
+
+# Fill
+bar_fill = Image(1, BAR_HEIGHT);
+bar_fill_sprite = Sprite();
+bar_fill_sprite.SetX(BAR_X);
+bar_fill_sprite.SetY(BAR_Y);
+bar_fill_sprite.SetZ(11);
+
+progress = 0;
+
+fun ProgressCallback(duration, progress_value) {
+    progress = progress_value;
+    fill_w = Math.Int(BAR_WIDTH * progress);
+    if (fill_w < 1) fill_w = 1;
+
+    new_fill = Image(fill_w, BAR_HEIGHT);
+    bar_fill_sprite.SetImage(new_fill);
+}
+
+Plymouth.SetBootProgressFunction(ProgressCallback);
+
+# ── Pulse animation ──────────────────────────────────────────
+pulse_opacity = 1.0;
+pulse_dir     = -1;
+pulse_speed   = 0.015;
+
+fun RefreshCallback() {
+    pulse_opacity = pulse_opacity + pulse_dir * pulse_speed;
+    if (pulse_opacity <= 0.5) { pulse_dir =  1; }
+    if (pulse_opacity >= 1.0) { pulse_dir = -1; }
+    logo_sprite.SetOpacity(pulse_opacity);
+}
+
+Plymouth.SetRefreshFunction(RefreshCallback);
+
+# ── Message display ──────────────────────────────────────────
+msg_sprite = Sprite();
+msg_sprite.SetX(Window.GetWidth() / 2 - 200);
+msg_sprite.SetY(Window.GetHeight() / 2 + 80);
+msg_sprite.SetZ(10);
+
+fun MessageCallback(text) {
+    msg_img = Image.Text(text, 0.478, 0.620, 0.529, 1);
+    msg_sprite.SetImage(msg_img);
+    msg_sprite.SetX(Window.GetWidth() / 2 - msg_img.GetWidth() / 2);
+}
+
+Plymouth.SetMessageFunction(MessageCallback);
