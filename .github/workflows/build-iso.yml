@@ -3,7 +3,7 @@ name: Build Velora Linux ISO
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:   # permite declansare manuala din GitHub UI
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,26 +14,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install live-build
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -y live-build xorriso isolinux syslinux syslinux-common syslinux-utils
-
       - name: Make build.sh executable
         run: chmod +x build.sh
 
       - name: Build Velora Linux ISO
         run: sudo bash build.sh
-
-      - name: Make ISO bootable with isohybrid
-        run: |
-          ISO=$(find . -name "*.iso" | head -1)
-          if [ -n "$ISO" ]; then
-            echo "Applying isohybrid to: $ISO"
-            sudo isohybrid "$ISO" || echo "isohybrid failed, trying without"
-            sudo mkdir -p iso
-            sudo cp "$ISO" "iso/VeloraLinux-1.0.iso"
-          fi
 
       - name: Upload ISO as artifact
         uses: actions/upload-artifact@v4

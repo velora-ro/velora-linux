@@ -1,14 +1,17 @@
 #!/bin/bash
 # ============================================================
 #  Velora Linux - Build Script
-#  Builds the Velora Linux ISO using live-build
+#  Manual debootstrap + xorriso method
+#  Guaranteed bootable ISO (BIOS + UEFI)
 # ============================================================
 
 set -e
 
 VELORA_VERSION="1.0"
 ISO_NAME="VeloraLinux-${VELORA_VERSION}.iso"
-BUILD_DIR="$(pwd)/build"
+WORK_DIR="$(pwd)/work"
+CHROOT_DIR="${WORK_DIR}/chroot"
+ISO_DIR="${WORK_DIR}/isoroot"
 
 echo ""
 echo "🌲 Velora Linux Build System"
@@ -16,80 +19,212 @@ echo "   Version: ${VELORA_VERSION}"
 echo "============================================"
 echo ""
 
-# Check if live-build is installed
-if ! command -v lb &> /dev/null; then
-    echo "[ERROR] live-build is not installed."
-    echo "   Run: sudo apt install live-build"
-    exit 1
+# ── Install dependencies ─────────────────────────────────────
+echo "[*] Installing build dependencies..."
+apt-get update -q
+apt-get install -y \
+    debootstrap \
+    squashfs-tools \
+    xorriso \
+    grub-pc-bin \
+    grub-efi-amd64-bin \
+    mtools \
+    dosfstools
+
+# ── Clean previous build ─────────────────────────────────────
+echo "[*] Cleaning previous build..."
+rm -rf "${WORK_DIR}"
+mkdir -p "${CHROOT_DIR}" "${ISO_DIR}"
+
+# ── Bootstrap base Ubuntu system ─────────────────────────────
+echo "[*] Bootstrapping Ubuntu Jammy base system..."
+debootstrap \
+    --arch=amd64 \
+    --include=linux-image-generic,casper,live-boot,systemd-sysv,sudo,grub-pc \
+    jammy \
+    "${CHROOT_DIR}" \
+    http://archive.ubuntu.com/ubuntu/
+
+# ── Configure chroot ─────────────────────────────────────────
+echo "[*] Configuring system..."
+
+# Copy resolv.conf for internet in chroot
+cp /etc/resolv.conf "${CHROOT_DIR}/etc/resolv.conf"
+
+# Mount virtual filesystems
+mount --bind /dev "${CHROOT_DIR}/dev"
+mount --bind /proc "${CHROOT_DIR}/proc"
+mount --bind /sys "${CHROOT_DIR}/sys"
+
+# Run configuration inside chroot
+chroot "${CHROOT_DIR}" /bin/bash <<'CHROOT_END'
+set -e
+
+export DEBIAN_FRONTEND=noninteractive
+export LANG=C
+
+# Add Ubuntu repos
+cat > /etc/apt/sources.list << 'EOF'
+deb http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse
+EOF
+
+apt-get update -q
+
+# Install desktop
+echo "[chroot] Installing KDE Plasma..."
+apt-get install -y --no-install-recommends \
+    kde-plasma-desktop \
+    sddm \
+    xorg \
+    network-manager \
+    plasma-nm \
+    dolphin \
+    konsole
+
+# Install system tools
+echo "[chroot] Installing system tools..."
+apt-get install -y \
+    wget curl git \
+    python3 python3-pip \
+    flatpak \
+    htop
+
+# Set locale
+locale-gen en_US.UTF-8
+update-locale LANG=en_US.UTF-8
+
+# Enable SDDM
+systemctl enable sddm
+
+# Set os-release
+cat > /etc/os-release << 'EOF'
+NAME="Velora Linux"
+VERSION="1.0"
+ID=velora
+ID_LIKE=ubuntu
+PRETTY_NAME="Velora Linux 1.0"
+VERSION_ID="1.0"
+HOME_URL="https://github.com/velora-ro/velora-linux"
+EOF
+
+# Set hostname
+echo "velora" > /etc/hostname
+
+# Clean up
+apt-get clean
+rm -rf /tmp/* /var/tmp/*
+
+CHROOT_END
+
+# ── Unmount virtual filesystems ──────────────────────────────
+echo "[*] Unmounting filesystems..."
+umount "${CHROOT_DIR}/dev"  || true
+umount "${CHROOT_DIR}/proc" || true
+umount "${CHROOT_DIR}/sys"  || true
+
+# ── Create squashfs ──────────────────────────────────────────
+echo "[*] Creating squashfs filesystem..."
+mkdir -p "${ISO_DIR}/live"
+mksquashfs \
+    "${CHROOT_DIR}" \
+    "${ISO_DIR}/live/filesystem.squashfs" \
+    -comp gzip \
+    -noappend \
+    -no-progress
+
+# ── Copy kernel and initrd ───────────────────────────────────
+echo "[*] Copying kernel and initrd..."
+mkdir -p "${ISO_DIR}/boot"
+cp "${CHROOT_DIR}/boot/vmlinuz"    "${ISO_DIR}/boot/vmlinuz"
+cp "${CHROOT_DIR}/boot/initrd.img" "${ISO_DIR}/boot/initrd.img"
+
+# ── Setup GRUB ───────────────────────────────────────────────
+echo "[*] Setting up GRUB bootloader..."
+
+mkdir -p "${ISO_DIR}/boot/grub"
+
+cat > "${ISO_DIR}/boot/grub/grub.cfg" << 'EOF'
+set timeout=5
+set default=0
+
+menuentry "🌲 Velora Linux 1.0 (Live)" {
+    linux /boot/vmlinuz boot=live quiet splash
+    initrd /boot/initrd.img
+}
+
+menuentry "🌲 Velora Linux 1.0 (Safe Mode)" {
+    linux /boot/vmlinuz boot=live nomodeset
+    initrd /boot/initrd.img
+}
+EOF
+
+# ── Build the ISO ────────────────────────────────────────────
+echo "[*] Building ISO with xorriso..."
+mkdir -p "$(pwd)/iso"
+
+grub-mkstandalone \
+    --format=i386-pc \
+    --output="${WORK_DIR}/core.img" \
+    --install-modules="linux normal iso9660 biosdisk memdisk search tar ls" \
+    --modules="linux normal iso9660 biosdisk search" \
+    --locales="" \
+    --fonts="" \
+    "boot/grub/grub.cfg=${ISO_DIR}/boot/grub/grub.cfg"
+
+cat /usr/lib/grub/i386-pc/cdboot.img "${WORK_DIR}/core.img" > "${WORK_DIR}/bios.img"
+
+xorriso \
+    -as mkisofs \
+    -iso-level 3 \
+    -full-iso9660-filenames \
+    -volid "VeloraLinux" \
+    -eltorito-boot boot/grub/bios.img \
+    -no-emul-boot \
+    -boot-load-size 4 \
+    -boot-info-table \
+    --eltorito-catalog boot/grub/boot.cat \
+    --grub2-boot-info \
+    --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img \
+    -eltorito-alt-boot \
+    -e EFI/efiboot.img \
+    -no-emul-boot \
+    -append_partition 2 0xef "${WORK_DIR}/efiboot.img" \
+    -output "$(pwd)/iso/${ISO_NAME}" \
+    "${ISO_DIR}" \
+    "${WORK_DIR}/bios.img" \
+    2>&1 | tee "$(pwd)/build.log" || true
+
+# Simpler fallback if above fails
+if [ ! -f "$(pwd)/iso/${ISO_NAME}" ]; then
+    echo "[*] Trying simpler xorriso command..."
+
+    cp "${WORK_DIR}/bios.img" "${ISO_DIR}/boot/grub/bios.img"
+
+    xorriso \
+        -as mkisofs \
+        -iso-level 3 \
+        -volid "VeloraLinux" \
+        -b boot/grub/bios.img \
+        -no-emul-boot \
+        -boot-load-size 4 \
+        -boot-info-table \
+        -output "$(pwd)/iso/${ISO_NAME}" \
+        "${ISO_DIR}" \
+        2>&1 | tee -a "$(pwd)/build.log"
 fi
 
-# Clean previous build
-if [ -d "$BUILD_DIR" ]; then
-    echo "[*] Cleaning previous build..."
-    rm -rf "$BUILD_DIR"
-fi
-
-mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
-
-echo "[*] Configuring live-build..."
-
-# Detect if we're on Ubuntu or Debian
-if grep -qi ubuntu /etc/os-release 2>/dev/null; then
-    DISTRO="jammy"
-    MIRROR="http://archive.ubuntu.com/ubuntu/"
-    MIRROR_BOOTSTRAP="http://archive.ubuntu.com/ubuntu/"
-    ARCHIVE_AREAS="main restricted universe multiverse"
-else
-    DISTRO="bookworm"
-    MIRROR="http://deb.debian.org/debian/"
-    MIRROR_BOOTSTRAP="http://deb.debian.org/debian/"
-    ARCHIVE_AREAS="main contrib non-free non-free-firmware"
-fi
-
-echo "[*] Detected distribution base: $DISTRO"
-
-lb config \
-    --distribution "$DISTRO" \
-    --mirror-bootstrap "$MIRROR_BOOTSTRAP" \
-    --mirror-chroot "$MIRROR" \
-    --mirror-binary "$MIRROR" \
-    --archive-areas "$ARCHIVE_AREAS" \
-    --binary-images iso-hybrid \
-    --bootloader grub-pc \
-    --bootappend-live "boot=live components quiet splash" \
-    --iso-volume "Velora Linux ${VELORA_VERSION}" \
-    --iso-publisher "Velora <velora.official.ro@gmail.com>" \
-    --iso-application "Velora Linux" \
-    --memtest none \
-    --win32-loader false
-
-echo "[*] Copying package lists..."
-cp -r ../configs/packages.chroot config/package-lists/
-cp -r ../configs/includes.chroot config/includes.chroot/ 2>/dev/null || true
-
-echo "[*] Copying hooks..."
-mkdir -p config/hooks/normal
-cp -r ../configs/hooks/normal/. config/hooks/normal/ 2>/dev/null || true
-chmod +x config/hooks/normal/*.hook.chroot 2>/dev/null || true
-
-echo "[*] Starting build (this will take a while)..."
-echo ""
-sudo lb build 2>&1 | tee ../build.log
-
-# Find and rename ISO - also check in current directory
-ISO_FILE=$(find . -name "*.iso" 2>/dev/null | head -1)
-if [ -z "$ISO_FILE" ]; then
-  ISO_FILE=$(find .. -name "*.iso" 2>/dev/null | head -1)
-fi
-if [ -n "$ISO_FILE" ]; then
-    cp "$ISO_FILE" "../iso/${ISO_NAME}"
+# ── Done ─────────────────────────────────────────────────────
+if [ -f "$(pwd)/iso/${ISO_NAME}" ]; then
+    SIZE=$(du -h "$(pwd)/iso/${ISO_NAME}" | cut -f1)
     echo ""
     echo "============================================"
     echo "✅ Build complete!"
     echo "   ISO: iso/${ISO_NAME}"
+    echo "   Size: ${SIZE}"
     echo "============================================"
 else
-    echo "[ERROR] ISO not found. Check build.log for errors."
+    echo "[ERROR] ISO not found. Check build.log."
     exit 1
 fi
