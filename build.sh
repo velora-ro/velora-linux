@@ -40,7 +40,7 @@ mkdir -p "${CHROOT_DIR}" "${ISO_DIR}"
 echo "[*] Bootstrapping Ubuntu Jammy base system..."
 debootstrap \
     --arch=amd64 \
-    --include=linux-image-generic,casper,systemd-sysv,sudo,grub-pc \
+    --include=linux-image-generic,systemd-sysv,sudo,grub-pc \
     jammy \
     "${CHROOT_DIR}" \
     http://archive.ubuntu.com/ubuntu/
@@ -71,6 +71,10 @@ deb http://security.ubuntu.com/ubuntu jammy-security main restricted universe mu
 EOF
 
 apt-get update -q
+
+# Install casper for live boot
+echo "[chroot] Installing casper..."
+apt-get install -y casper
 
 # Install desktop
 echo "[chroot] Installing KDE Plasma..."
