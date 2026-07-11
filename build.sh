@@ -76,6 +76,10 @@ apt-get update -q
 echo "[chroot] Installing casper..."
 apt-get install -y casper
 
+# Generate initramfs
+echo "[chroot] Generating initramfs..."
+update-initramfs -u -k all
+
 # Install desktop
 echo "[chroot] Installing KDE Plasma..."
 apt-get install -y --no-install-recommends \
