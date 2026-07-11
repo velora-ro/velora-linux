@@ -147,7 +147,21 @@ mksquashfs \
     -noappend \
     -no-progress
 
-# ── Copy kernel and initrd ───────────────────────────────────
+# ── Create live boot structure ────────────────────────────────
+echo "[*] Creating live boot structure..."
+mkdir -p "${ISO_DIR}/.disk"
+echo "Velora Linux 1.0 - Live" > "${ISO_DIR}/.disk/info"
+echo "full_cd" > "${ISO_DIR}/.disk/cd_type"
+touch "${ISO_DIR}/.disk/base_installable"
+
+# Casper needs a specific label file
+mkdir -p "${ISO_DIR}/casper"
+# Copy squashfs to casper dir (casper looks here)
+mv "${ISO_DIR}/live/filesystem.squashfs" "${ISO_DIR}/casper/filesystem.squashfs" 2>/dev/null || true
+# Copy manifest
+chroot "${CHROOT_DIR}" dpkg-query -W --showformat='${Package} ${Version}\n' > "${ISO_DIR}/casper/filesystem.manifest" 2>/dev/null || true
+
+# ── Copy kernel and initrd to casper ────────────────────────
 echo "[*] Copying kernel and initrd..."
 mkdir -p "${ISO_DIR}/boot"
 
@@ -167,8 +181,8 @@ if [ -z "$VMLINUZ" ] || [ -z "$INITRD" ]; then
     exit 1
 fi
 
-cp "$VMLINUZ" "${ISO_DIR}/boot/vmlinuz"
-cp "$INITRD"  "${ISO_DIR}/boot/initrd.img"
+cp "$VMLINUZ" "${ISO_DIR}/casper/vmlinuz"
+cp "$INITRD"  "${ISO_DIR}/casper/initrd"
 
 # ── Setup GRUB ───────────────────────────────────────────────
 echo "[*] Setting up GRUB bootloader..."
@@ -177,26 +191,23 @@ mkdir -p "${ISO_DIR}/boot/grub"
 
 cat > "${ISO_DIR}/boot/grub/grub.cfg" << 'EOF'
 search --no-floppy --label --set=root VeloraLinux
-set prefix=($root)/boot/grub
 
 insmod all_video
 insmod gfxterm
 insmod iso9660
-insmod squash4
-insmod loopback
 insmod linux
 
 set timeout=5
 set default=0
 
 menuentry "Velora Linux 1.0 (Live)" {
-    linux /boot/vmlinuz boot=live components quiet splash
-    initrd /boot/initrd.img
+    linux /casper/vmlinuz boot=casper quiet splash ---
+    initrd /casper/initrd
 }
 
 menuentry "Velora Linux 1.0 (Safe Mode)" {
-    linux /boot/vmlinuz boot=live nomodeset
-    initrd /boot/initrd.img
+    linux /casper/vmlinuz boot=casper nomodeset ---
+    initrd /casper/initrd
 }
 EOF
 
