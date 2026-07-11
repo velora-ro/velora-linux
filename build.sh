@@ -56,14 +56,13 @@ lb config \
     --mirror-binary "$MIRROR" \
     --archive-areas "$ARCHIVE_AREAS" \
     --binary-images iso-hybrid \
-    --bootloader syslinux,grub-efi \
+    --bootloader syslinux \
     --bootappend-live "boot=live components quiet splash" \
     --iso-volume "Velora Linux ${VELORA_VERSION}" \
     --iso-publisher "Velora <velora.official.ro@gmail.com>" \
     --iso-application "Velora Linux" \
     --memtest none \
-    --win32-loader false \
-    --system-boot "syslinux"
+    --win32-loader false
 
 echo "[*] Copying package lists..."
 cp -r ../configs/packages.chroot config/package-lists/
