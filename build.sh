@@ -206,8 +206,8 @@ mkdir -p "$(pwd)/iso"
 
 grub-mkrescue \
     --output="$(pwd)/iso/${ISO_NAME}" \
+    --modules="iso9660 squash4 loopback linux normal search search_fs_uuid search_label all_video gfxterm" \
     "${ISO_DIR}" \
-    -- -volid "VeloraLinux" \
     2>&1 | tee "$(pwd)/build.log"
 
 # ── Done ─────────────────────────────────────────────────────
