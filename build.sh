@@ -62,7 +62,8 @@ lb config \
     --iso-publisher "Velora <velora.official.ro@gmail.com>" \
     --iso-application "Velora Linux" \
     --memtest none \
-    --win32-loader false
+    --win32-loader false \
+    --system-boot "syslinux"
 
 echo "[*] Copying package lists..."
 cp -r ../configs/packages.chroot config/package-lists/
@@ -77,8 +78,11 @@ echo "[*] Starting build (this will take a while)..."
 echo ""
 sudo lb build 2>&1 | tee ../build.log
 
-# Find and rename ISO
-ISO_FILE=$(find . -name "*.iso" | head -1)
+# Find and rename ISO - also check in current directory
+ISO_FILE=$(find . -name "*.iso" 2>/dev/null | head -1)
+if [ -z "$ISO_FILE" ]; then
+  ISO_FILE=$(find .. -name "*.iso" 2>/dev/null | head -1)
+fi
 if [ -n "$ISO_FILE" ]; then
     cp "$ISO_FILE" "../iso/${ISO_NAME}"
     echo ""
