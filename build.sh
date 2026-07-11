@@ -191,59 +191,14 @@ menuentry "🌲 Velora Linux 1.0 (Safe Mode)" {
 EOF
 
 # ── Build the ISO ────────────────────────────────────────────
-echo "[*] Building ISO with xorriso..."
+echo "[*] Building ISO with grub-mkrescue..."
 mkdir -p "$(pwd)/iso"
 
-grub-mkstandalone \
-    --format=i386-pc \
-    --output="${WORK_DIR}/core.img" \
-    --install-modules="linux normal iso9660 biosdisk memdisk search tar ls" \
-    --modules="linux normal iso9660 biosdisk search" \
-    --locales="" \
-    --fonts="" \
-    "boot/grub/grub.cfg=${ISO_DIR}/boot/grub/grub.cfg"
-
-cat /usr/lib/grub/i386-pc/cdboot.img "${WORK_DIR}/core.img" > "${WORK_DIR}/bios.img"
-
-xorriso \
-    -as mkisofs \
-    -iso-level 3 \
-    -full-iso9660-filenames \
-    -volid "VeloraLinux" \
-    -eltorito-boot boot/grub/bios.img \
-    -no-emul-boot \
-    -boot-load-size 4 \
-    -boot-info-table \
-    --eltorito-catalog boot/grub/boot.cat \
-    --grub2-boot-info \
-    --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img \
-    -eltorito-alt-boot \
-    -e EFI/efiboot.img \
-    -no-emul-boot \
-    -append_partition 2 0xef "${WORK_DIR}/efiboot.img" \
-    -output "$(pwd)/iso/${ISO_NAME}" \
+grub-mkrescue \
+    --output="$(pwd)/iso/${ISO_NAME}" \
     "${ISO_DIR}" \
-    "${WORK_DIR}/bios.img" \
-    2>&1 | tee "$(pwd)/build.log" || true
-
-# Simpler fallback if above fails
-if [ ! -f "$(pwd)/iso/${ISO_NAME}" ]; then
-    echo "[*] Trying simpler xorriso command..."
-
-    cp "${WORK_DIR}/bios.img" "${ISO_DIR}/boot/grub/bios.img"
-
-    xorriso \
-        -as mkisofs \
-        -iso-level 3 \
-        -volid "VeloraLinux" \
-        -b boot/grub/bios.img \
-        -no-emul-boot \
-        -boot-load-size 4 \
-        -boot-info-table \
-        -output "$(pwd)/iso/${ISO_NAME}" \
-        "${ISO_DIR}" \
-        2>&1 | tee -a "$(pwd)/build.log"
-fi
+    -- -volid "VeloraLinux" \
+    2>&1 | tee "$(pwd)/build.log"
 
 # ── Done ─────────────────────────────────────────────────────
 if [ -f "$(pwd)/iso/${ISO_NAME}" ]; then

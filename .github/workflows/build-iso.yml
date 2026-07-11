@@ -14,8 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Make build.sh executable
-        run: chmod +x build.sh
+      - name: Install live-build
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y debootstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin grub-common mtools dosfstools
 
       - name: Build Velora Linux ISO
         run: sudo bash build.sh
