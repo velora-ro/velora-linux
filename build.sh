@@ -40,7 +40,7 @@ mkdir -p "${CHROOT_DIR}" "${ISO_DIR}"
 echo "[*] Bootstrapping Ubuntu Jammy base system..."
 debootstrap \
     --arch=amd64 \
-    --include=linux-image-generic,casper,live-boot,systemd-sysv,sudo,grub-pc \
+    --include=linux-image-generic,casper,systemd-sysv,sudo,grub-pc \
     jammy \
     "${CHROOT_DIR}" \
     http://archive.ubuntu.com/ubuntu/
