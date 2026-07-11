@@ -190,8 +190,6 @@ echo "[*] Setting up GRUB bootloader..."
 mkdir -p "${ISO_DIR}/boot/grub"
 
 cat > "${ISO_DIR}/boot/grub/grub.cfg" << 'EOF'
-search --no-floppy --label --set=root VeloraLinux
-
 insmod all_video
 insmod gfxterm
 insmod iso9660
@@ -201,11 +199,13 @@ set timeout=5
 set default=0
 
 menuentry "Velora Linux 1.0 (Live)" {
+    set root=(cd0)
     linux /casper/vmlinuz boot=casper quiet splash ---
     initrd /casper/initrd
 }
 
 menuentry "Velora Linux 1.0 (Safe Mode)" {
+    set root=(cd0)
     linux /casper/vmlinuz boot=casper nomodeset ---
     initrd /casper/initrd
 }
