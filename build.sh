@@ -76,9 +76,14 @@ apt-get update -q
 echo "[chroot] Installing casper..."
 apt-get install -y casper
 
-# Generate initramfs
+# Make sure initramfs is generated
 echo "[chroot] Generating initramfs..."
-update-initramfs -u -k all
+KERNEL_VERSION=$(ls /lib/modules/ | sort -V | tail -1)
+echo "[chroot] Kernel version: $KERNEL_VERSION"
+if [ -n "$KERNEL_VERSION" ]; then
+    update-initramfs -c -k "$KERNEL_VERSION" || update-initramfs -u -k all
+fi
+ls -la /boot/
 
 # Install desktop
 echo "[chroot] Installing KDE Plasma..."
@@ -146,20 +151,21 @@ mksquashfs \
 echo "[*] Copying kernel and initrd..."
 mkdir -p "${ISO_DIR}/boot"
 
+echo "[*] Contents of chroot/boot:"
+ls -la "${CHROOT_DIR}/boot/" || echo "empty"
+
 # Find kernel and initrd dynamically
-VMLINUZ=$(ls "${CHROOT_DIR}/boot/vmlinuz-"* 2>/dev/null | sort -V | tail -1)
-INITRD=$(ls "${CHROOT_DIR}/boot/initrd.img-"* 2>/dev/null | sort -V | tail -1)
+VMLINUZ=$(find "${CHROOT_DIR}/boot" -name "vmlinuz*" -not -name "*.old" | sort -V | tail -1)
+INITRD=$(find "${CHROOT_DIR}/boot" -name "initrd*" -not -name "*.old" | sort -V | tail -1)
 
-if [ -z "$VMLINUZ" ]; then
-    # Try symlink
-    VMLINUZ="${CHROOT_DIR}/boot/vmlinuz"
-fi
-if [ -z "$INITRD" ]; then
-    INITRD="${CHROOT_DIR}/boot/initrd.img"
-fi
+echo "[*] Found kernel: $VMLINUZ"
+echo "[*] Found initrd: $INITRD"
 
-echo "[*] Using kernel: $VMLINUZ"
-echo "[*] Using initrd: $INITRD"
+if [ -z "$VMLINUZ" ] || [ -z "$INITRD" ]; then
+    echo "[ERROR] Could not find kernel or initrd in chroot/boot"
+    ls -la "${CHROOT_DIR}/boot/"
+    exit 1
+fi
 
 cp "$VMLINUZ" "${ISO_DIR}/boot/vmlinuz"
 cp "$INITRD"  "${ISO_DIR}/boot/initrd.img"
