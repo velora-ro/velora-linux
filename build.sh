@@ -56,7 +56,7 @@ lb config \
     --mirror-binary "$MIRROR" \
     --archive-areas "$ARCHIVE_AREAS" \
     --binary-images iso-hybrid \
-    --bootloader grub-efi,grub-legacy \
+    --bootloader syslinux,grub-efi \
     --bootappend-live "boot=live components quiet splash" \
     --iso-volume "Velora Linux ${VELORA_VERSION}" \
     --iso-publisher "Velora <velora.official.ro@gmail.com>" \
