@@ -210,6 +210,10 @@ grub-mkrescue \
     "${ISO_DIR}" \
     2>&1 | tee "$(pwd)/build.log"
 
+# Show ISO structure for debugging
+echo "[*] ISO structure:"
+isoinfo -l -i "$(pwd)/iso/${ISO_NAME}" 2>/dev/null | head -50 || true
+
 # ── Done ─────────────────────────────────────────────────────
 if [ -f "$(pwd)/iso/${ISO_NAME}" ]; then
     SIZE=$(du -h "$(pwd)/iso/${ISO_NAME}" | cut -f1)
