@@ -176,15 +176,25 @@ echo "[*] Setting up GRUB bootloader..."
 mkdir -p "${ISO_DIR}/boot/grub"
 
 cat > "${ISO_DIR}/boot/grub/grub.cfg" << 'EOF'
+search --no-floppy --label --set=root VeloraLinux
+set prefix=($root)/boot/grub
+
+insmod all_video
+insmod gfxterm
+insmod iso9660
+insmod squash4
+insmod loopback
+insmod linux
+
 set timeout=5
 set default=0
 
-menuentry "🌲 Velora Linux 1.0 (Live)" {
-    linux /boot/vmlinuz boot=live quiet splash
+menuentry "Velora Linux 1.0 (Live)" {
+    linux /boot/vmlinuz boot=live components quiet splash
     initrd /boot/initrd.img
 }
 
-menuentry "🌲 Velora Linux 1.0 (Safe Mode)" {
+menuentry "Velora Linux 1.0 (Safe Mode)" {
     linux /boot/vmlinuz boot=live nomodeset
     initrd /boot/initrd.img
 }
