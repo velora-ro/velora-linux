@@ -141,8 +141,24 @@ mksquashfs \
 # ── Copy kernel and initrd ───────────────────────────────────
 echo "[*] Copying kernel and initrd..."
 mkdir -p "${ISO_DIR}/boot"
-cp "${CHROOT_DIR}/boot/vmlinuz"    "${ISO_DIR}/boot/vmlinuz"
-cp "${CHROOT_DIR}/boot/initrd.img" "${ISO_DIR}/boot/initrd.img"
+
+# Find kernel and initrd dynamically
+VMLINUZ=$(ls "${CHROOT_DIR}/boot/vmlinuz-"* 2>/dev/null | sort -V | tail -1)
+INITRD=$(ls "${CHROOT_DIR}/boot/initrd.img-"* 2>/dev/null | sort -V | tail -1)
+
+if [ -z "$VMLINUZ" ]; then
+    # Try symlink
+    VMLINUZ="${CHROOT_DIR}/boot/vmlinuz"
+fi
+if [ -z "$INITRD" ]; then
+    INITRD="${CHROOT_DIR}/boot/initrd.img"
+fi
+
+echo "[*] Using kernel: $VMLINUZ"
+echo "[*] Using initrd: $INITRD"
+
+cp "$VMLINUZ" "${ISO_DIR}/boot/vmlinuz"
+cp "$INITRD"  "${ISO_DIR}/boot/initrd.img"
 
 # ── Setup GRUB ───────────────────────────────────────────────
 echo "[*] Setting up GRUB bootloader..."
