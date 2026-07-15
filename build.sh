@@ -93,7 +93,6 @@ apt-get install -y --no-install-recommends \
     gnome-control-center \
     gnome-tweaks \
     gnome-shell-extensions \
-    gnome-shell-extension-dash-to-dock \
     gdm3 \
     xorg \
     network-manager \
@@ -114,6 +113,22 @@ apt-get install -y --no-install-recommends \
 
 # Set Nautilus as default file manager
 xdg-mime default org.gnome.Nautilus.desktop inode/directory || true
+
+# ── Install Dash-to-Dock manually ────────────────────────────
+echo "[chroot] Installing Dash-to-Dock extension..."
+EXTENSION_UUID="dash-to-dock@micxgx.gmail.com"
+EXTENSION_DIR="/usr/share/gnome-shell/extensions/${EXTENSION_UUID}"
+mkdir -p "${EXTENSION_DIR}"
+# Download dash-to-dock for GNOME 42 (Ubuntu 22.04)
+wget -q -O /tmp/dash-to-dock.zip \
+    "https://extensions.gnome.org/extension-data/dash-to-dockmicxgx.gmail.com.v84.shell-extension.zip" || \
+wget -q -O /tmp/dash-to-dock.zip \
+    "https://github.com/micheleg/dash-to-dock/archive/refs/heads/master.zip" || true
+if [ -f /tmp/dash-to-dock.zip ]; then
+    apt-get install -y unzip || true
+    unzip -q /tmp/dash-to-dock.zip -d "${EXTENSION_DIR}" || true
+    rm -f /tmp/dash-to-dock.zip
+fi
 
 # ── Velora Green Theme ────────────────────────────────────────
 echo "[chroot] Installing Velora green theme..."
