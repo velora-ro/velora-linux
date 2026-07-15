@@ -111,6 +111,16 @@ update-locale LANG=en_US.UTF-8
 # Enable SDDM
 systemctl enable sddm
 
+# Fix casper CD-ROM detection for QEMU/VMs
+mkdir -p /etc/casper.conf.d/
+cat > /etc/casper.conf << 'CASPEREOF'
+export FLAVOUR="Velora Linux"
+export WRITABLE_IMAGES="false"
+export LIVE_USERNAME="velora"
+export LIVE_USER_FULLNAME="Velora User"
+export LIVE_USER_DEFAULT_GROUPS="audio cdrom dip floppy video plugdev netdev powerdev scanner bluetooth"
+CASPEREOF
+
 # Set os-release
 cat > /etc/os-release << 'EOF'
 NAME="Velora Linux"
@@ -206,13 +216,13 @@ search --no-floppy --label --set=root "VELORA_LINUX"
 
 menuentry "Velora Linux 1.0 (Live)" {
     search --no-floppy --label --set=root "VELORA_LINUX"
-    linux  /casper/vmlinuz boot=casper quiet splash ---
+    linux  /casper/vmlinuz boot=casper cdrom-detect/try-usb=true quiet splash ---
     initrd /casper/initrd
 }
 
 menuentry "Velora Linux 1.0 (Safe Mode - nomodeset)" {
     search --no-floppy --label --set=root "VELORA_LINUX"
-    linux  /casper/vmlinuz boot=casper nomodeset ---
+    linux  /casper/vmlinuz boot=casper cdrom-detect/try-usb=true nomodeset ---
     initrd /casper/initrd
 }
 EOF
