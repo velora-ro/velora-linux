@@ -247,8 +247,22 @@ export FLAVOUR="Velora Linux"
 export WRITABLE_IMAGES="false"
 export LIVE_USERNAME="velora"
 export LIVE_USER_FULLNAME="Velora User"
-export LIVE_USER_DEFAULT_GROUPS="audio cdrom dip floppy video plugdev netdev powerdev scanner bluetooth"
+export LIVE_USER_DEFAULT_GROUPS="audio cdrom dip floppy video plugdev netdev powerdev scanner bluetooth sudo"
 CASPEREOF
+
+# GDM autologin for live session
+mkdir -p /etc/gdm3
+cat > /etc/gdm3/custom.conf << 'GDMEOF'
+[daemon]
+AutomaticLoginEnable=true
+AutomaticLogin=velora
+TimedLoginEnable=false
+
+[security]
+[xdmcp]
+[chooser]
+[debug]
+GDMEOF
 
 # Set os-release
 cat > /etc/os-release << 'EOF'
