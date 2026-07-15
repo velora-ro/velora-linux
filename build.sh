@@ -85,39 +85,145 @@ if [ -n "$KERNEL_VERSION" ]; then
 fi
 ls -la /boot/
 
-# Install desktop - XFCE (lightweight, works in QEMU)
-echo "[chroot] Installing XFCE Desktop..."
+# Install desktop - GNOME (matches Velora mockup design)
+echo "[chroot] Installing GNOME Desktop..."
 apt-get install -y --no-install-recommends \
-    xfce4 \
-    xfce4-terminal \
-    xfce4-taskmanager \
-    lightdm \
-    lightdm-gtk-greeter \
+    gnome-shell \
+    gnome-session \
+    gnome-control-center \
+    gnome-tweaks \
+    gnome-shell-extensions \
+    gnome-shell-extension-dash-to-dock \
+    gdm3 \
     xorg \
     network-manager \
     network-manager-gnome \
     nautilus \
     nautilus-admin \
     xdg-utils \
-    mousepad
+    gnome-terminal \
+    papirus-icon-theme \
+    gtk2-engines-murrine \
+    gtk2-engines-pixbuf \
+    wget curl git \
+    python3 python3-pip \
+    flatpak \
+    gnome-software \
+    gnome-software-plugin-flatpak \
+    htop
 
 # Set Nautilus as default file manager
 xdg-mime default org.gnome.Nautilus.desktop inode/directory || true
 
-# Install system tools
-echo "[chroot] Installing system tools..."
-apt-get install -y \
-    wget curl git \
-    python3 python3-pip \
-    flatpak \
-    htop
+# ── Velora Green Theme ────────────────────────────────────────
+echo "[chroot] Installing Velora green theme..."
+mkdir -p /usr/share/themes/VeloraForest
+
+# GTK3 theme - dark green
+mkdir -p /usr/share/themes/VeloraForest/gtk-3.0
+cat > /usr/share/themes/VeloraForest/gtk-3.0/gtk.css << 'CSSEOF'
+@import url("resource:///org/gnome/theme/gtk-contained-dark.css");
+
+@define-color accent_color #2F6B52;
+@define-color accent_bg_color #2F6B52;
+@define-color accent_fg_color #ffffff;
+@define-color window_bg_color #1a1f1c;
+@define-color window_fg_color #e8f5e9;
+@define-color view_bg_color #1e2520;
+@define-color view_fg_color #e8f5e9;
+@define-color headerbar_bg_color #1a1f1c;
+@define-color headerbar_fg_color #e8f5e9;
+@define-color sidebar_bg_color #161b18;
+@define-color card_bg_color rgba(46,60,52,0.9);
+
+window, .background {
+    background-color: @window_bg_color;
+    color: @window_fg_color;
+}
+
+headerbar {
+    background-color: @headerbar_bg_color;
+    color: @headerbar_fg_color;
+    border-bottom: 1px solid rgba(47,107,82,0.3);
+}
+
+button.suggested-action {
+    background-color: @accent_color;
+    color: white;
+}
+
+.sidebar {
+    background-color: @sidebar_bg_color;
+}
+CSSEOF
+
+# Theme index
+cat > /usr/share/themes/VeloraForest/index.theme << 'THEMEEOF'
+[Desktop Entry]
+Type=X-GNOME-Metatheme
+Name=VeloraForest
+Comment=Velora Linux dark green theme
+Encoding=UTF-8
+
+[X-GNOME-Metatheme]
+GtkTheme=VeloraForest
+MetacityTheme=VeloraForest
+IconTheme=Papirus-Dark
+CursorTheme=Adwaita
+ButtonLayout=close,minimize,maximize:
+THEMEEOF
+
+# ── GNOME dconf settings ──────────────────────────────────────
+echo "[chroot] Configuring GNOME settings..."
+mkdir -p /etc/dconf/db/local.d
+cat > /etc/dconf/db/local.d/00-velora << 'DCONFEOF'
+[org/gnome/desktop/interface]
+gtk-theme='VeloraForest'
+icon-theme='Papirus-Dark'
+cursor-theme='Adwaita'
+font-name='Inter 10'
+color-scheme='prefer-dark'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/velora-wallpaper.jpg'
+picture-uri-dark='file:///usr/share/backgrounds/velora-wallpaper.jpg'
+picture-options='zoom'
+
+[org/gnome/shell]
+enabled-extensions=['dash-to-dock@micxgx.gmail.com']
+favorite-apps=['org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Settings.desktop']
+
+[org/gnome/shell/extensions/dash-to-dock]
+dock-position='BOTTOM'
+dock-fixed=true
+extend-height=false
+dash-max-icon-size=36
+transparency-mode='FIXED'
+background-opacity=0.7
+custom-background-color=true
+background-color='#1a2e22'
+show-apps-button=true
+
+[org/gnome/mutter]
+round-corners=true
+DCONFEOF
+
+dconf update || true
+
+# ── Velora wallpaper ──────────────────────────────────────────
+mkdir -p /usr/share/backgrounds
+# Download a nature wallpaper (mountain + lake - matches mockup)
+wget -q -O /usr/share/backgrounds/velora-wallpaper.jpg \
+    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80" || \
+    wget -q -O /usr/share/backgrounds/velora-wallpaper.jpg \
+    "https://picsum.photos/1920/1080?nature" || true
 
 # Set locale
 locale-gen en_US.UTF-8
 update-locale LANG=en_US.UTF-8
 
-# Enable LightDM
-systemctl enable lightdm
+# Enable GDM
+systemctl enable gdm3
 
 # Fix casper CD-ROM detection for QEMU/VMs
 mkdir -p /etc/casper.conf.d/
