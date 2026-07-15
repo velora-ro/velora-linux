@@ -85,16 +85,19 @@ if [ -n "$KERNEL_VERSION" ]; then
 fi
 ls -la /boot/
 
-# Install desktop
-echo "[chroot] Installing KDE Plasma..."
+# Install desktop - XFCE (lightweight, works in QEMU)
+echo "[chroot] Installing XFCE Desktop..."
 apt-get install -y --no-install-recommends \
-    kde-plasma-desktop \
-    sddm \
+    xfce4 \
+    xfce4-terminal \
+    xfce4-taskmanager \
+    lightdm \
+    lightdm-gtk-greeter \
     xorg \
     network-manager \
-    plasma-nm \
-    dolphin \
-    konsole
+    network-manager-gnome \
+    thunar \
+    mousepad
 
 # Install system tools
 echo "[chroot] Installing system tools..."
@@ -108,8 +111,8 @@ apt-get install -y \
 locale-gen en_US.UTF-8
 update-locale LANG=en_US.UTF-8
 
-# Enable SDDM
-systemctl enable sddm
+# Enable LightDM
+systemctl enable lightdm
 
 # Fix casper CD-ROM detection for QEMU/VMs
 mkdir -p /etc/casper.conf.d/
