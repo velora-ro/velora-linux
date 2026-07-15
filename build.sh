@@ -98,10 +98,11 @@ apt-get install -y --no-install-recommends \
     network-manager-gnome \
     nautilus \
     nautilus-admin \
+    xdg-utils \
     mousepad
 
 # Set Nautilus as default file manager
-xdg-mime default org.gnome.Nautilus.desktop inode/directory
+xdg-mime default org.gnome.Nautilus.desktop inode/directory || true
 
 # Install system tools
 echo "[chroot] Installing system tools..."
