@@ -7,7 +7,7 @@
 
 set -e
 
-VELORA_VERSION="1.0"
+VELORA_VERSION="0.8"
 ISO_NAME="VeloraLinux-${VELORA_VERSION}.iso"
 WORK_DIR="$(pwd)/work"
 CHROOT_DIR="${WORK_DIR}/chroot"
@@ -253,11 +253,11 @@ CASPEREOF
 # Set os-release
 cat > /etc/os-release << 'EOF'
 NAME="Velora Linux"
-VERSION="1.0"
+VERSION="0.8"
 ID=velora
 ID_LIKE=ubuntu
-PRETTY_NAME="Velora Linux 1.0"
-VERSION_ID="1.0"
+PRETTY_NAME="Velora Linux 0.8"
+VERSION_ID="0.8"
 HOME_URL="https://github.com/velora-ro/velora-linux"
 EOF
 
@@ -289,7 +289,7 @@ mksquashfs \
 # ── Create live boot structure ────────────────────────────────
 echo "[*] Creating live boot structure..."
 mkdir -p "${ISO_DIR}/.disk"
-echo "Velora Linux 1.0 - Live" > "${ISO_DIR}/.disk/info"
+echo "Velora Linux 0.8 - Live" > "${ISO_DIR}/.disk/info"
 echo "full_cd" > "${ISO_DIR}/.disk/cd_type"
 touch "${ISO_DIR}/.disk/base_installable"
 
@@ -343,13 +343,13 @@ insmod search_fs_uuid
 # Find the ISO device automatically by label
 search --no-floppy --label --set=root "VELORA_LINUX"
 
-menuentry "Velora Linux 1.0 (Live)" {
+menuentry "Velora Linux 0.8 (Live)" {
     search --no-floppy --label --set=root "VELORA_LINUX"
     linux  /casper/vmlinuz boot=casper cdrom-detect/try-usb=true quiet splash ---
     initrd /casper/initrd
 }
 
-menuentry "Velora Linux 1.0 (Safe Mode - nomodeset)" {
+menuentry "Velora Linux 0.8 (Safe Mode - nomodeset)" {
     search --no-floppy --label --set=root "VELORA_LINUX"
     linux  /casper/vmlinuz boot=casper cdrom-detect/try-usb=true nomodeset ---
     initrd /casper/initrd
