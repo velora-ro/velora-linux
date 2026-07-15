@@ -190,23 +190,29 @@ echo "[*] Setting up GRUB bootloader..."
 mkdir -p "${ISO_DIR}/boot/grub"
 
 cat > "${ISO_DIR}/boot/grub/grub.cfg" << 'EOF'
+set default=0
+set timeout=5
+
 insmod all_video
 insmod gfxterm
 insmod iso9660
 insmod linux
+insmod search
+insmod search_label
+insmod search_fs_uuid
 
-set timeout=5
-set default=0
+# Find the ISO device automatically by label
+search --no-floppy --label --set=root "VELORA_LINUX"
 
 menuentry "Velora Linux 1.0 (Live)" {
-    set root=(cd0)
-    linux /casper/vmlinuz boot=casper quiet splash ---
+    search --no-floppy --label --set=root "VELORA_LINUX"
+    linux  /casper/vmlinuz boot=casper quiet splash ---
     initrd /casper/initrd
 }
 
-menuentry "Velora Linux 1.0 (Safe Mode)" {
-    set root=(cd0)
-    linux /casper/vmlinuz boot=casper nomodeset ---
+menuentry "Velora Linux 1.0 (Safe Mode - nomodeset)" {
+    search --no-floppy --label --set=root "VELORA_LINUX"
+    linux  /casper/vmlinuz boot=casper nomodeset ---
     initrd /casper/initrd
 }
 EOF
@@ -218,6 +224,7 @@ mkdir -p "$(pwd)/iso"
 grub-mkrescue \
     --output="$(pwd)/iso/${ISO_NAME}" \
     --modules="iso9660 squash4 loopback linux normal search search_fs_uuid search_label all_video gfxterm" \
+    -volid "VELORA_LINUX" \
     "${ISO_DIR}" \
     2>&1 | tee "$(pwd)/build.log"
 
