@@ -25,8 +25,8 @@ jobs:
       - name: Upload ISO as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VeloraLinux-1.0
-          path: iso/VeloraLinux-1.0.iso
+          name: VeloraLinux-0.8
+          path: iso/VeloraLinux-0.8.iso
           retention-days: 7
 
       - name: Upload build log on failure
