@@ -96,8 +96,12 @@ apt-get install -y --no-install-recommends \
     xorg \
     network-manager \
     network-manager-gnome \
-    thunar \
+    nautilus \
+    nautilus-admin \
     mousepad
+
+# Set Nautilus as default file manager
+xdg-mime default org.gnome.Nautilus.desktop inode/directory
 
 # Install system tools
 echo "[chroot] Installing system tools..."
