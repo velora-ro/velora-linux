@@ -475,12 +475,16 @@ cat > "${ISO_DIR}/boot/grub/grub.cfg" << 'EOF'
 set default=0
 set timeout=5
 
+insmod part_msdos
+insmod part_gpt
+insmod iso9660
 insmod all_video
 insmod gfxterm
-insmod iso9660
 insmod linux
+insmod normal
 insmod search
 insmod search_label
+insmod configfile
 
 search --no-floppy --label --set=root "VELORA_LINUX"
 
@@ -501,7 +505,7 @@ EOF
 mkdir -p "$(pwd)/iso"
 grub-mkrescue \
     --output="$(pwd)/iso/${ISO_NAME}" \
-    --modules="iso9660 squash4 loopback linux normal search search_fs_uuid search_label all_video gfxterm" \
+    --modules="iso9660 squash4 loopback linux normal configfile search search_fs_uuid search_label search_fs_file all_video gfxterm gfxterm_background font png jpeg" \
     -volid "VELORA_LINUX" \
     "${ISO_DIR}" \
     2>&1 | tee "$(pwd)/build.log"
