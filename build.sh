@@ -89,7 +89,18 @@ apt-get install -y --no-install-recommends \
     python3 python3-pip \
     flatpak \
     htop \
-    unzip
+    unzip \
+    apt-transport-https \
+    gnupg
+
+# ── Brave Browser ─────────────────────────────────────────────
+echo "[chroot] Installing Brave..."
+curl -fsSL https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg \
+    -o /usr/share/keyrings/brave-browser-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" \
+    > /etc/apt/sources.list.d/brave-browser-release.list
+apt-get update -q
+apt-get install -y brave-browser
 
 # Set Nautilus as default file manager
 xdg-mime default org.gnome.Nautilus.desktop inode/directory || true
