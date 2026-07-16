@@ -308,7 +308,6 @@ mkdir -p "$(pwd)/iso"
 grub-mkrescue \
     --output="$(pwd)/iso/${ISO_NAME}" \
     --modules="part_msdos part_gpt iso9660 linux normal configfile search search_fs_label search_fs_uuid all_video gfxterm gfxterm_background font" \
-    --core-compress=xz \
     -volid "VELORA_LINUX" \
     "${ISO_DIR}" \
     2>&1 | tee "$(pwd)/build.log"
