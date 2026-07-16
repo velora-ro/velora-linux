@@ -77,6 +77,8 @@ apt-get install -y --no-install-recommends \
     lightdm \
     lightdm-gtk-greeter \
     xorg \
+    xserver-xorg-video-all \
+    xserver-xorg-input-all \
     network-manager \
     network-manager-gnome \
     nautilus \
@@ -139,6 +141,25 @@ autologin-user=velora
 autologin-user-timeout=0
 user-session=xfce
 LDMEOF
+
+# ── Xorg config for QEMU/VMs ──────────────────────────────────
+mkdir -p /etc/X11
+cat > /etc/X11/xorg.conf << 'XORGEOF'
+Section "Device"
+    Identifier "Card0"
+    Driver     "vesa"
+EndSection
+
+Section "Screen"
+    Identifier "Screen0"
+    Device     "Card0"
+    DefaultDepth 24
+    SubSection "Display"
+        Depth  24
+        Modes  "1024x768" "800x600"
+    EndSubSection
+EndSection
+XORGEOF
 
 # ── Casper config ─────────────────────────────────────────────
 cat > /etc/casper.conf << 'CASPEREOF'
