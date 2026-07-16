@@ -102,8 +102,113 @@ echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] http
 apt-get update -q
 apt-get install -y brave-browser
 
-# Set Nautilus as default file manager
-xdg-mime default org.gnome.Nautilus.desktop inode/directory || true
+# ── XFCE appearance settings ─────────────────────────────────
+echo "[chroot] Configuring XFCE appearance..."
+mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml
+
+# GTK theme + icons
+cat > /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xsettings" version="1.0">
+  <property name="Net" type="empty">
+    <property name="ThemeName" type="string" value="VeloraForest"/>
+    <property name="IconThemeName" type="string" value="Papirus-Dark"/>
+  </property>
+  <property name="Gtk" type="empty">
+    <property name="FontName" type="string" value="Sans 10"/>
+    <property name="CursorThemeName" type="string" value="Adwaita"/>
+  </property>
+</channel>
+EOF
+
+# Taskbar - Windows style (bottom panel, start button + taskbar + clock)
+cat > /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-panel" version="1.0">
+  <property name="configver" type="int" value="2"/>
+  <property name="panels" type="array">
+    <value type="int" value="1"/>
+    <property name="panel-1" type="empty">
+      <property name="position" type="string" value="p=8;x=0;y=0"/>
+      <property name="length" type="uint" value="100"/>
+      <property name="position-locked" type="bool" value="true"/>
+      <property name="size" type="uint" value="36"/>
+      <property name="background-style" type="uint" value="1"/>
+      <property name="background-color" type="string" value="#1a1f1cff"/>
+      <property name="plugin-ids" type="array">
+        <value type="int" value="1"/>
+        <value type="int" value="2"/>
+        <value type="int" value="3"/>
+        <value type="int" value="4"/>
+        <value type="int" value="5"/>
+      </property>
+    </property>
+  </property>
+  <property name="plugins" type="empty">
+    <property name="plugin-1" type="string" value="applicationsmenu">
+      <property name="button-title" type="string" value="Velora"/>
+      <property name="show-button-title" type="bool" value="true"/>
+      <property name="button-icon" type="string" value="/usr/share/pixmaps/velora-logo.png"/>
+    </property>
+    <property name="plugin-2" type="string" value="tasklist">
+      <property name="show-labels" type="bool" value="true"/>
+      <property name="grouping" type="uint" value="1"/>
+    </property>
+    <property name="plugin-3" type="string" value="separator">
+      <property name="expand" type="bool" value="true"/>
+      <property name="style" type="uint" value="0"/>
+    </property>
+    <property name="plugin-4" type="string" value="systray"/>
+    <property name="plugin-5" type="string" value="clock">
+      <property name="digital-format" type="string" value="%H:%M  %d %b"/>
+    </property>
+  </property>
+</channel>
+EOF
+
+# Desktop wallpaper dark green
+cat > /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xfce4-desktop" version="1.0">
+  <property name="backdrop" type="empty">
+    <property name="screen0" type="empty">
+      <property name="monitorVGA-1" type="empty">
+        <property name="workspace0" type="empty">
+          <property name="color-style" type="int" value="0"/>
+          <property name="image-style" type="int" value="5"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/velora-wallpaper.jpg"/>
+        </property>
+      </property>
+      <property name="monitorscreen" type="empty">
+        <property name="workspace0" type="empty">
+          <property name="color-style" type="int" value="0"/>
+          <property name="image-style" type="int" value="5"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/velora-wallpaper.jpg"/>
+        </property>
+      </property>
+    </property>
+  </property>
+</channel>
+EOF
+
+# ── Velora logo for start button ──────────────────────────────
+mkdir -p /usr/share/pixmaps
+# Create simple SVG logo (V green)
+cat > /usr/share/pixmaps/velora-logo.svg << 'SVGEOF'
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="6" fill="#1a2e22"/>
+  <text x="16" y="23" font-family="Arial" font-size="20" font-weight="bold"
+        fill="#2F6B52" text-anchor="middle">V</text>
+</svg>
+SVGEOF
+cp /usr/share/pixmaps/velora-logo.svg /usr/share/pixmaps/velora-logo.png || true
+
+# ── Wallpaper ─────────────────────────────────────────────────
+mkdir -p /usr/share/backgrounds
+wget -q -O /usr/share/backgrounds/velora-wallpaper.jpg \
+    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80" || \
+wget -q -O /usr/share/backgrounds/velora-wallpaper.jpg \
+    "https://picsum.photos/seed/velora/1920/1080" || true
 
 # ── Velora Forest Theme (GTK dark green) ──────────────────────
 mkdir -p /usr/share/themes/VeloraForest/gtk-3.0
