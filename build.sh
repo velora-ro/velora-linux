@@ -188,6 +188,14 @@ cat > /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml << 'E
       </property>
     </property>
   </property>
+  <property name="desktop-icons" type="empty">
+    <property name="file-icons" type="empty">
+      <property name="show-removable" type="bool" value="false"/>
+      <property name="show-trash" type="bool" value="true"/>
+      <property name="show-filesystem" type="bool" value="false"/>
+      <property name="show-home" type="bool" value="true"/>
+    </property>
+  </property>
 </channel>
 EOF
 
@@ -209,6 +217,14 @@ wget -q -O /usr/share/backgrounds/velora-wallpaper.jpg \
     "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80" || \
 wget -q -O /usr/share/backgrounds/velora-wallpaper.jpg \
     "https://picsum.photos/seed/velora/1920/1080" || true
+# Fallback: solid dark green background
+if [ ! -s /usr/share/backgrounds/velora-wallpaper.jpg ]; then
+    convert -size 1920x1080 gradient:"#0d1a12"-"#1a2e22" \
+        /usr/share/backgrounds/velora-wallpaper.jpg 2>/dev/null || \
+    apt-get install -y imagemagick && \
+    convert -size 1920x1080 gradient:"#0d1a12"-"#1a2e22" \
+        /usr/share/backgrounds/velora-wallpaper.jpg || true
+fi
 
 # ── Velora Forest Theme (GTK dark green) ──────────────────────
 mkdir -p /usr/share/themes/VeloraForest/gtk-3.0
@@ -233,6 +249,14 @@ button.suggested-action {
     background-color: @accent_color;
     color: white;
     border-radius: 6px;
+}
+selection, *:selected {
+    background-color: rgba(47, 107, 82, 0.4);
+    color: @window_fg_color;
+}
+rubberband, .rubberband {
+    background-color: rgba(47, 107, 82, 0.2);
+    border: 1px solid #2F6B52;
 }
 CSSEOF
 
