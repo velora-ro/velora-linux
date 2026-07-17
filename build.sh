@@ -486,19 +486,19 @@ insmod gfxterm
 insmod linux
 insmod normal
 insmod search
-insmod search_file
+insmod search_label
 insmod configfile
 
-search --no-floppy --file --set=root /live/vmlinuz
+search --no-floppy --label --set=root "VELORA_LINUX"
 
 menuentry "Velora Linux 0.8 (Live)" {
-    search --no-floppy --file --set=root /live/vmlinuz
+    search --no-floppy --label --set=root "VELORA_LINUX"
     linux  /live/vmlinuz boot=live quiet splash
     initrd /live/initrd
 }
 
 menuentry "Velora Linux 0.8 (Safe Mode)" {
-    search --no-floppy --file --set=root /live/vmlinuz
+    search --no-floppy --label --set=root "VELORA_LINUX"
     linux  /live/vmlinuz boot=live nomodeset
     initrd /live/initrd
 }
@@ -510,7 +510,7 @@ mkdir -p "$(pwd)/iso"
 
 grub-mkrescue \
     --output="$(pwd)/iso/${ISO_NAME}" \
-    --modules="part_msdos part_gpt iso9660 linux normal configfile search search_label search_file all_video gfxterm font" \
+    --modules="part_msdos part_gpt iso9660 linux normal configfile search search_label all_video gfxterm font" \
     -volid "VELORA_LINUX" \
     "${ISO_DIR}" \
     2>&1 | tee "$(pwd)/build.log"
