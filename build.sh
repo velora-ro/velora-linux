@@ -270,18 +270,20 @@ insmod linux
 insmod normal
 insmod search
 insmod search_label
+insmod search_file
 insmod configfile
 
-search --no-floppy --label --set=root "VELORA_LINUX"
+# Try to find the ISO by file presence (more reliable than label)
+search --no-floppy --file --set=root /casper/vmlinuz
 
 menuentry "Velora Linux 0.8 (Live)" {
-    search --no-floppy --label --set=root "VELORA_LINUX"
+    search --no-floppy --file --set=root /casper/vmlinuz
     linux  /casper/vmlinuz boot=casper cdrom-detect/try-usb=true quiet splash ---
     initrd /casper/initrd
 }
 
 menuentry "Velora Linux 0.8 (Safe Mode)" {
-    search --no-floppy --label --set=root "VELORA_LINUX"
+    search --no-floppy --file --set=root /casper/vmlinuz
     linux  /casper/vmlinuz boot=casper cdrom-detect/try-usb=true nomodeset ---
     initrd /casper/initrd
 }
@@ -304,6 +306,19 @@ EARLYEOF
 # ── Build ISO ─────────────────────────────────────────────────
 echo "[*] Building ISO..."
 mkdir -p "$(pwd)/iso"
+
+# Create embedded GRUB config that auto-loads normal module
+mkdir -p /tmp/grub-embed
+cat > /tmp/grub-embed/grub-early.cfg <<EARLYEOF
+set prefix=(\$root)/boot/grub
+insmod part_msdos
+insmod part_gpt
+insmod iso9660
+insmod normal
+search --no-floppy --label --set=root "VELORA_LINUX"
+set prefix=(\$root)/boot/grub
+normal
+EARLYEOF
 
 grub-mkrescue \
     --output="$(pwd)/iso/${ISO_NAME}" \
