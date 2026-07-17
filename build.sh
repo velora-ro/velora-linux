@@ -72,7 +72,7 @@ apt-get install -y --no-install-recommends \
     konsole \
     ark \
     kate \
-    spectacle \
+    kde-spectacle \
     network-manager \
     wget curl git \
     python3 python3-pip \
