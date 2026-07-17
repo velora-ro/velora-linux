@@ -171,6 +171,42 @@ DCONF
 
 dconf update 2>/dev/null || true
 
+# ── Apply theme for live user via skel + autostart ────────────
+mkdir -p /etc/skel/.config/dconf
+# Pre-populate dconf for live user
+mkdir -p /etc/skel/.config/autostart
+
+cat > /etc/skel/.config/autostart/velora-theme.desktop <<AUTOEOF
+[Desktop Entry]
+Type=Application
+Name=Velora Theme Setup
+Exec=/usr/local/bin/velora-apply-theme.sh
+Hidden=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+OnlyShowIn=GNOME;
+AUTOEOF
+
+cat > /usr/local/bin/velora-apply-theme.sh <<SCRIPTEOF
+#!/bin/bash
+# Apply Velora theme for current user
+gsettings set org.gnome.desktop.interface gtk-theme 'VeloraForest'
+gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+gsettings set org.gnome.desktop.interface font-name 'Cantarell 11'
+gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/velora-wallpaper.jpg'
+gsettings set org.gnome.desktop.background picture-uri-dark 'file:///usr/share/backgrounds/velora-wallpaper.jpg'
+gsettings set org.gnome.desktop.background picture-options 'zoom'
+gsettings set org.gnome.desktop.wm.preferences button-layout 'close,minimize,maximize:'
+gsettings set org.gnome.mutter dynamic-workspaces false
+gsettings set org.gnome.shell enabled-extensions "['dash-to-dock@micxgx.gmail.com']"
+gsettings set org.gnome.shell favorite-apps "['brave-browser.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Settings.desktop']"
+# Remove autostart after first run
+rm -f ~/.config/autostart/velora-theme.desktop
+SCRIPTEOF
+
+chmod +x /usr/local/bin/velora-apply-theme.sh
+
 # ── Dash-to-dock ──────────────────────────────────────────────
 DOCK_DIR="/usr/share/gnome-shell/extensions/dash-to-dock@micxgx.gmail.com"
 mkdir -p "${DOCK_DIR}"
