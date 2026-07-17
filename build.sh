@@ -1,7 +1,8 @@
 #!/bin/bash
 # ============================================================
 #  Velora Linux - Build Script v0.8
-#  GNOME desktop + VeloraForest theme
+#  Base: Debian 12 Bookworm
+#  Desktop: KDE Plasma + VeloraForest theme
 # ============================================================
 
 set -e
@@ -12,7 +13,7 @@ WORK_DIR="$(pwd)/work"
 CHROOT_DIR="${WORK_DIR}/chroot"
 ISO_DIR="${WORK_DIR}/isoroot"
 
-echo "Velora Linux Build System v${VELORA_VERSION}"
+echo "Velora Linux Build System v${VELORA_VERSION} - Debian + KDE"
 
 # ── Build dependencies ────────────────────────────────────────
 apt-get update -q
@@ -25,12 +26,12 @@ apt-get install -y \
 rm -rf "${WORK_DIR}"
 mkdir -p "${CHROOT_DIR}" "${ISO_DIR}"
 
-# ── Bootstrap ─────────────────────────────────────────────────
-echo "[*] Bootstrapping..."
+# ── Bootstrap Debian 12 ───────────────────────────────────────
+echo "[*] Bootstrapping Debian 12 Bookworm..."
 debootstrap --arch=amd64 \
-    --include=linux-image-generic,systemd-sysv,sudo,grub-pc \
-    jammy "${CHROOT_DIR}" \
-    http://archive.ubuntu.com/ubuntu/
+    --include=linux-image-amd64,systemd-sysv,sudo,grub-pc \
+    bookworm "${CHROOT_DIR}" \
+    http://deb.debian.org/debian/
 
 # ── Chroot ───────────────────────────────────────────────────
 cp /etc/resolv.conf "${CHROOT_DIR}/etc/resolv.conf"
@@ -44,30 +45,45 @@ export DEBIAN_FRONTEND=noninteractive
 export LANG=C
 
 cat > /etc/apt/sources.list <<SOURCES
-deb http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse
-deb http://archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse
-deb http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse
+deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security bookworm-security main contrib non-free
 SOURCES
 
 apt-get update -q
-apt-get install -y casper
 
+# Live boot support
+apt-get install -y live-boot live-boot-initramfs-tools
+
+# Generate initramfs
 KERNEL_VERSION=$(ls /lib/modules/ | sort -V | tail -1)
-[ -n "$KERNEL_VERSION" ] && (update-initramfs -c -k "$KERNEL_VERSION" || update-initramfs -u -k all)
+[ -n "$KERNEL_VERSION" ] && update-initramfs -c -k "$KERNEL_VERSION" || true
 
-# ── GNOME ─────────────────────────────────────────────────────
+# ── KDE Plasma Desktop ────────────────────────────────────────
+echo "[chroot] Installing KDE Plasma..."
 apt-get install -y --no-install-recommends \
-    gnome-shell gnome-session gnome-control-center gnome-tweaks \
-    gnome-shell-extensions gdm3 xorg \
-    xserver-xorg-video-all xserver-xorg-input-all \
-    network-manager network-manager-gnome \
-    nautilus nautilus-admin xdg-utils \
-    gnome-terminal papirus-icon-theme \
-    wget curl git python3 python3-pip \
-    flatpak gnome-software gnome-software-plugin-flatpak \
-    htop unzip apt-transport-https gnupg imagemagick
+    kde-plasma-desktop \
+    sddm \
+    xorg \
+    xserver-xorg-video-all \
+    xserver-xorg-input-all \
+    plasma-nm \
+    dolphin \
+    konsole \
+    ark \
+    kate \
+    spectacle \
+    network-manager \
+    wget curl git \
+    python3 python3-pip \
+    flatpak \
+    plasma-discover \
+    htop unzip \
+    apt-transport-https gnupg \
+    papirus-icon-theme \
+    fonts-cantarell
 
-# ── Brave ─────────────────────────────────────────────────────
+# ── Brave Browser ─────────────────────────────────────────────
 curl -fsSL https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg \
     -o /usr/share/keyrings/brave-browser-archive-keyring.gpg 2>/dev/null || true
 echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" \
@@ -75,188 +91,355 @@ echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] http
 apt-get update -q
 apt-get install -y brave-browser || true
 
-# ── VeloraForest Theme ────────────────────────────────────────
-mkdir -p /usr/share/themes/VeloraForest/gtk-3.0
-mkdir -p /usr/share/themes/VeloraForest/gtk-4.0
+# ── VeloraForest KDE Theme ────────────────────────────────────
+echo "[chroot] Installing VeloraForest KDE theme..."
 
-cat > /usr/share/themes/VeloraForest/gtk-3.0/gtk.css <<GTKEOF
-@define-color accent_color #2F6B52;
-@define-color window_bg_color #1a1f1c;
-@define-color window_fg_color #e8f5e9;
-@define-color headerbar_bg_color #161b18;
-@define-color sidebar_bg_color #161b18;
-@define-color view_bg_color #1e2520;
-@define-color popover_bg_color #1e2520;
+# Color scheme
+mkdir -p /usr/share/color-schemes
+cat > /usr/share/color-schemes/VeloraForest.colors <<COLEOF
+[ColorEffects:Disabled]
+Color=56,56,56
+ColorAmount=0
+ColorEffect=0
+ContrastAmount=0.65
+ContrastEffect=1
+IntensityAmount=0.1
+IntensityEffect=2
 
-window, .background { background-color: @window_bg_color; color: @window_fg_color; }
-headerbar, .titlebar { background-color: @headerbar_bg_color; color: @window_fg_color; border-bottom: 1px solid rgba(47,107,82,0.3); border-radius: 12px 12px 0 0; min-height: 46px; padding: 0 8px; }
-.view, scrolledwindow { background-color: @view_bg_color; color: @window_fg_color; }
-.sidebar, placessidebar { background-color: @sidebar_bg_color; border-right: 1px solid rgba(47,107,82,0.2); }
-.sidebar row:selected { background-color: rgba(47,107,82,0.3); color: white; }
-button { background-color: rgba(47,107,82,0.15); color: @window_fg_color; border: 1px solid rgba(47,107,82,0.25); border-radius: 8px; padding: 6px 14px; }
-button:hover { background-color: rgba(47,107,82,0.3); border-color: @accent_color; }
-button.suggested-action { background-color: @accent_color; color: white; border: none; }
-entry, searchentry { background-color: @view_bg_color; color: @window_fg_color; border: 1px solid rgba(47,107,82,0.3); border-radius: 8px; padding: 8px 12px; }
-entry:focus { border-color: @accent_color; }
-selection, *:selected { background-color: rgba(47,107,82,0.4); color: white; }
-rubberband, .rubberband { background-color: rgba(47,107,82,0.2); border: 1px solid @accent_color; }
-popover, .popover { background-color: @popover_bg_color; border: 1px solid rgba(47,107,82,0.3); border-radius: 12px; }
-switch:checked { background-color: @accent_color; }
-GTKEOF
+[ColorEffects:Inactive]
+ChangeSelectionColor=true
+Color=112,111,110
+ColorAmount=0.025
+ColorEffect=2
+ContrastAmount=0.1
+ContrastEffect=2
+Enable=false
+IntensityAmount=0
+IntensityEffect=0
 
-cp /usr/share/themes/VeloraForest/gtk-3.0/gtk.css /usr/share/themes/VeloraForest/gtk-4.0/gtk.css
+[Colors:Button]
+BackgroundAlternate=44,55,48
+BackgroundNormal=30,42,34
+DecorationFocus=47,107,82
+DecorationHover=95,158,110
+ForegroundActive=232,245,233
+ForegroundInactive=120,160,130
+ForegroundLink=41,182,246
+ForegroundNegative=218,68,83
+ForegroundNeutral=246,116,0
+ForegroundNormal=232,245,233
+ForegroundPositive=39,174,96
+ForegroundVisited=127,140,141
 
-cat > /usr/share/themes/VeloraForest/index.theme <<THEOF
-[Desktop Entry]
-Type=X-GNOME-Metatheme
+[Colors:Complementary]
+BackgroundAlternate=22,30,24
+BackgroundNormal=14,20,16
+DecorationFocus=47,107,82
+DecorationHover=95,158,110
+ForegroundActive=232,245,233
+ForegroundInactive=120,160,130
+ForegroundLink=41,182,246
+ForegroundNegative=218,68,83
+ForegroundNeutral=246,116,0
+ForegroundNormal=232,245,233
+ForegroundPositive=39,174,96
+ForegroundVisited=127,140,141
+
+[Colors:Header]
+BackgroundAlternate=22,30,24
+BackgroundNormal=18,24,20
+DecorationFocus=47,107,82
+DecorationHover=95,158,110
+ForegroundActive=232,245,233
+ForegroundInactive=120,160,130
+ForegroundLink=41,182,246
+ForegroundNegative=218,68,83
+ForegroundNeutral=246,116,0
+ForegroundNormal=232,245,233
+ForegroundPositive=39,174,96
+ForegroundVisited=127,140,141
+
+[Colors:Selection]
+BackgroundAlternate=47,107,82
+BackgroundNormal=47,107,82
+DecorationFocus=47,107,82
+DecorationHover=95,158,110
+ForegroundActive=232,245,233
+ForegroundInactive=232,245,233
+ForegroundLink=41,182,246
+ForegroundNegative=218,68,83
+ForegroundNeutral=246,116,0
+ForegroundNormal=232,245,233
+ForegroundPositive=39,174,96
+ForegroundVisited=127,140,141
+
+[Colors:Tooltip]
+BackgroundAlternate=22,30,24
+BackgroundNormal=26,31,28
+DecorationFocus=47,107,82
+DecorationHover=95,158,110
+ForegroundActive=232,245,233
+ForegroundInactive=120,160,130
+ForegroundLink=41,182,246
+ForegroundNegative=218,68,83
+ForegroundNeutral=246,116,0
+ForegroundNormal=232,245,233
+ForegroundPositive=39,174,96
+ForegroundVisited=127,140,141
+
+[Colors:View]
+BackgroundAlternate=22,30,24
+BackgroundNormal=18,26,20
+DecorationFocus=47,107,82
+DecorationHover=95,158,110
+ForegroundActive=232,245,233
+ForegroundInactive=120,160,130
+ForegroundLink=41,182,246
+ForegroundNegative=218,68,83
+ForegroundNeutral=246,116,0
+ForegroundNormal=232,245,233
+ForegroundPositive=39,174,96
+ForegroundVisited=127,140,141
+
+[Colors:Window]
+BackgroundAlternate=22,30,24
+BackgroundNormal=16,22,18
+DecorationFocus=47,107,82
+DecorationHover=95,158,110
+ForegroundActive=232,245,233
+ForegroundInactive=120,160,130
+ForegroundLink=41,182,246
+ForegroundNegative=218,68,83
+ForegroundNeutral=246,116,0
+ForegroundNormal=232,245,233
+ForegroundPositive=39,174,96
+ForegroundVisited=127,140,141
+
+[General]
+ColorScheme=VeloraForest
 Name=VeloraForest
-Comment=Velora Linux dark green theme
-Encoding=UTF-8
+shadeSortColumn=true
 
-[X-GNOME-Metatheme]
-GtkTheme=VeloraForest
-MetacityTheme=VeloraForest
-IconTheme=Papirus-Dark
-CursorTheme=Adwaita
-THEOF
+[KDE]
+contrast=4
 
-# ── GNOME dconf ───────────────────────────────────────────────
-mkdir -p /etc/dconf/db/local.d /etc/dconf/profile
+[WM]
+activeBackground=18,26,20
+activeForeground=232,245,233
+inactiveBackground=14,20,16
+inactiveForeground=120,160,130
+COLEOF
 
-cat > /etc/dconf/profile/user <<PROFEOF
-user-db:user
-system-db:local
-PROFEOF
+# ── KDE Plasma settings for live user ─────────────────────────
+mkdir -p /etc/skel/.config
 
-cat > /etc/dconf/db/local.d/00-velora <<DCONF
-[org/gnome/desktop/interface]
-gtk-theme='VeloraForest'
-icon-theme='Papirus-Dark'
-cursor-theme='Adwaita'
-font-name='Cantarell 11'
-color-scheme='prefer-dark'
+# Plasma appearance
+cat > /etc/skel/.config/kdeglobals <<KDEEOF
+[ColorEffects:Disabled]
+Color=56,56,56
 
-[org/gnome/desktop/background]
-picture-uri='file:///usr/share/backgrounds/velora-wallpaper.jpg'
-picture-uri-dark='file:///usr/share/backgrounds/velora-wallpaper.jpg'
-picture-options='zoom'
-primary-color='#0d1a12'
+[General]
+ColorScheme=VeloraForest
+Name=VeloraForest
+shadeSortColumn=true
+widgetStyle=Breeze
 
-[org/gnome/desktop/wm/preferences]
-button-layout='close,minimize,maximize:'
-num-workspaces=2
+[Icons]
+Theme=Papirus-Dark
 
-[org/gnome/mutter]
-dynamic-workspaces=false
-edge-tiling=true
+[KDE]
+LookAndFeelPackage=org.kde.breezedark.desktop
+contrast=4
+SingleClick=false
 
-[org/gnome/shell]
-enabled-extensions=['dash-to-dock@micxgx.gmail.com']
-favorite-apps=['brave-browser.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Settings.desktop']
+[WM]
+activeBackground=18,26,20
+activeForeground=232,245,233
+inactiveBackground=14,20,16
+inactiveForeground=120,160,130
+KDEEOF
 
-[org/gnome/shell/extensions/dash-to-dock]
-dock-position='BOTTOM'
-dock-fixed=true
-extend-height=false
-dash-max-icon-size=42
-transparency-mode='FIXED'
-background-opacity=0.75
-custom-background-color=true
-background-color='#161b18'
-show-apps-button=true
-autohide=false
-intellihide=false
-running-indicator-style='DOTS'
-DCONF
+# Plasma taskbar - Windows style (bottom panel)
+mkdir -p /etc/skel/.config
+cat > /etc/skel/.config/plasma-org.kde.plasma.desktop-appletsrc <<PANELEOF
+[ActionPlugins][0]
+RightButton;NoModifier=org.kde.contextmenu
 
-dconf update 2>/dev/null || true
+[ActionPlugins][1]
+RightButton;NoModifier=org.kde.contextmenu
 
-# ── Apply theme for live user via skel + autostart ────────────
-mkdir -p /etc/skel/.config/dconf
-# Pre-populate dconf for live user
-mkdir -p /etc/skel/.config/autostart
+[Containments][1]
+activityId=
+formfactor=2
+immutability=1
+lastScreen=0
+location=4
+plugin=org.kde.panel
+wallpaperplugin=org.kde.image
 
-cat > /etc/skel/.config/autostart/velora-theme.desktop <<AUTOEOF
-[Desktop Entry]
-Type=Application
-Name=Velora Theme Setup
-Exec=/usr/local/bin/velora-apply-theme.sh
-Hidden=false
-NoDisplay=true
-X-GNOME-Autostart-enabled=true
-OnlyShowIn=GNOME;
-AUTOEOF
+[Containments][1][Applets][2]
+immutability=1
+plugin=org.kde.plasma.kickoff
 
-cat > /usr/local/bin/velora-apply-theme.sh <<SCRIPTEOF
-#!/bin/bash
-# Apply Velora theme for current user
-gsettings set org.gnome.desktop.interface gtk-theme 'VeloraForest'
-gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'
-gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-gsettings set org.gnome.desktop.interface font-name 'Cantarell 11'
-gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/velora-wallpaper.jpg'
-gsettings set org.gnome.desktop.background picture-uri-dark 'file:///usr/share/backgrounds/velora-wallpaper.jpg'
-gsettings set org.gnome.desktop.background picture-options 'zoom'
-gsettings set org.gnome.desktop.wm.preferences button-layout 'close,minimize,maximize:'
-gsettings set org.gnome.mutter dynamic-workspaces false
-gsettings set org.gnome.shell enabled-extensions "['dash-to-dock@micxgx.gmail.com']"
-gsettings set org.gnome.shell favorite-apps "['brave-browser.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Settings.desktop']"
-# Remove autostart after first run
-rm -f ~/.config/autostart/velora-theme.desktop
-SCRIPTEOF
+[Containments][1][Applets][2][Configuration]
+PreloadWeight=100
 
-chmod +x /usr/local/bin/velora-apply-theme.sh
+[Containments][1][Applets][2][Configuration][General]
+icon=/usr/share/pixmaps/velora-logo.svg
+useCustomButtonImage=true
 
-# ── Dash-to-dock ──────────────────────────────────────────────
-DOCK_DIR="/usr/share/gnome-shell/extensions/dash-to-dock@micxgx.gmail.com"
-mkdir -p "${DOCK_DIR}"
-wget -q -O /tmp/dtd.zip \
-    "https://extensions.gnome.org/extension-data/dash-to-dockmicxgx.gmail.com.v84.shell-extension.zip" || true
-[ -f /tmp/dtd.zip ] && unzip -q /tmp/dtd.zip -d "${DOCK_DIR}" 2>/dev/null || true
-rm -f /tmp/dtd.zip
+[Containments][1][Applets][3]
+immutability=1
+plugin=org.kde.plasma.pager
+
+[Containments][1][Applets][4]
+immutability=1
+plugin=org.kde.plasma.taskmanager
+
+[Containments][1][Applets][4][Configuration][General]
+groupingStrategy=0
+maxStripes=1
+
+[Containments][1][Applets][5]
+immutability=1
+plugin=org.kde.plasma.systemtray
+
+[Containments][1][Applets][6]
+immutability=1
+plugin=org.kde.plasma.digitalclock
+
+[Containments][1][Applets][6][Configuration][Appearance]
+showDate=true
+showSeconds=false
+
+[Containments][1][General]
+showToolbox=false
+
+[Containments][2]
+activityId=
+formfactor=0
+immutability=1
+lastScreen=0
+location=0
+plugin=org.kde.plasma.folder
+wallpaperplugin=org.kde.image
+
+[Containments][2][Wallpaper][org.kde.image][General]
+Image=file:///usr/share/backgrounds/velora-wallpaper.jpg
+
+[ScreenMapping]
+itemsOnDisabledScreens=
+PANELEOF
+
+# Breeze Dark window decorations
+cat > /etc/skel/.config/kwinrc <<KWINEOF
+[org.kde.kdecoration2]
+ButtonsOnLeft=XIA
+ButtonsOnRight=
+library=org.kde.breeze
+theme=Breeze
+
+[Windows]
+BorderlessMaximizedWindows=false
+RoundedCorners=true
+
+[Plugins]
+blurEnabled=true
+kwin4_effect_dialogparentEnabled=true
+KWINEOF
+
+# Breeze appearance
+cat > /etc/skel/.config/breezerc <<BREEZEEOF
+[Common]
+OutlineIntensity=OutlineOff
+ShadowSize=ShadowVeryLarge
+ShadowStrength=128
+
+[Windeco Exception 0]
+Enabled=true
+ExceptionType=0
+HideTitleBar=false
+
+[Style]
+MenuOpacity=90
+BREEZEEOF
+
+# ── Velora Logo SVG ───────────────────────────────────────────
+mkdir -p /usr/share/pixmaps
+cat > /usr/share/pixmaps/velora-logo.svg <<SVGEOF
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <rect width="48" height="48" rx="10" fill="#161b18"/>
+  <polygon points="8,12 24,36 40,12 34,12 24,28 14,12" fill="#2F6B52"/>
+  <polygon points="14,12 24,28 34,12 28,12 24,22 20,12" fill="#5F9E6E"/>
+</svg>
+SVGEOF
 
 # ── Wallpaper ─────────────────────────────────────────────────
 mkdir -p /usr/share/backgrounds
 wget -q -O /usr/share/backgrounds/velora-wallpaper.jpg \
     "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80" 2>/dev/null || true
 if [ ! -s /usr/share/backgrounds/velora-wallpaper.jpg ]; then
-    convert -size 1920x1080 gradient:"#0a1a0f"-"#1a3520" \
-        /usr/share/backgrounds/velora-wallpaper.jpg 2>/dev/null || true
+    # Fallback gradient
+    python3 -c "
+from PIL import Image, ImageDraw
+img = Image.new('RGB', (1920, 1080))
+draw = ImageDraw.Draw(img)
+for y in range(1080):
+    r = int(10 + (20-10)*y/1080)
+    g = int(26 + (55-26)*y/1080)
+    b = int(16 + (35-16)*y/1080)
+    draw.line([(0,y),(1920,y)], fill=(r,g,b))
+img.save('/usr/share/backgrounds/velora-wallpaper.jpg')
+" 2>/dev/null || true
 fi
 
-# ── GDM autologin ─────────────────────────────────────────────
-mkdir -p /etc/gdm3
-cat > /etc/gdm3/custom.conf <<GDMEOF
-[daemon]
-AutomaticLoginEnable=true
-AutomaticLogin=velora
-TimedLoginEnable=false
-WaylandEnable=false
-GDMEOF
+# ── SDDM autologin ────────────────────────────────────────────
+mkdir -p /etc/sddm.conf.d
+cat > /etc/sddm.conf.d/autologin.conf <<SDDMEOF
+[Autologin]
+User=velora
+Session=plasma
+Relogin=false
+SDDMEOF
 
-# ── Casper ────────────────────────────────────────────────────
-cat > /etc/casper.conf <<CASPEREOF
-export FLAVOUR="Velora Linux"
-export WRITABLE_IMAGES="false"
-export LIVE_USERNAME="velora"
-export LIVE_USER_FULLNAME="Velora User"
-export LIVE_USER_DEFAULT_GROUPS="audio cdrom dip floppy video plugdev netdev powerdev scanner bluetooth sudo"
-CASPEREOF
+cat > /etc/sddm.conf.d/theme.conf <<SDDMTHEME
+[Theme]
+Current=breeze
+SDDMTHEME
+
+# ── Live boot config ──────────────────────────────────────────
+cat > /etc/live/boot.conf <<LIVEEOF
+LIVE_USERNAME="velora"
+LIVE_USER_FULLNAME="Velora User"
+LIVE_USER_DEFAULT_GROUPS="audio cdrom dip floppy video plugdev netdev powerdev scanner bluetooth sudo"
+LIVEEOF
 
 # ── OS identity ───────────────────────────────────────────────
 cat > /etc/os-release <<OSEOF
 NAME="Velora Linux"
 VERSION="0.8"
 ID=velora
-ID_LIKE=ubuntu
+ID_LIKE=debian
 PRETTY_NAME="Velora Linux 0.8"
 VERSION_ID="0.8"
 HOME_URL="https://velora-ro.github.io"
 OSEOF
 
 echo "velora" > /etc/hostname
-systemctl enable gdm3
+
+cat > /etc/hosts <<HOSTSEOF
+127.0.0.1 localhost
+127.0.1.1 velora
+HOSTSEOF
+
+# Enable SDDM
+systemctl enable sddm
+systemctl enable NetworkManager
+
+# Flatpak
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
+
+# Cleanup
 apt-get clean
 rm -rf /tmp/* /var/tmp/*
 
@@ -269,28 +452,26 @@ umount "${CHROOT_DIR}/sys"  || true
 
 # ── Squashfs ──────────────────────────────────────────────────
 echo "[*] Creating squashfs..."
-mkdir -p "${ISO_DIR}/casper"
-mksquashfs "${CHROOT_DIR}" "${ISO_DIR}/casper/filesystem.squashfs" \
+mkdir -p "${ISO_DIR}/live"
+mksquashfs "${CHROOT_DIR}" "${ISO_DIR}/live/filesystem.squashfs" \
     -comp gzip -noappend -no-progress
 
-chroot "${CHROOT_DIR}" dpkg-query -W --showformat='${Package} ${Version}\n' \
-    > "${ISO_DIR}/casper/filesystem.manifest" 2>/dev/null || true
-
-# ── Kernel ────────────────────────────────────────────────────
+# ── Kernel + initrd ───────────────────────────────────────────
 VMLINUZ=$(find "${CHROOT_DIR}/boot" -name "vmlinuz*" -not -name "*.old" | sort -V | tail -1)
 INITRD=$(find  "${CHROOT_DIR}/boot" -name "initrd*"  -not -name "*.old" | sort -V | tail -1)
 [ -z "$VMLINUZ" ] && { echo "ERROR: kernel not found"; exit 1; }
 [ -z "$INITRD"  ] && { echo "ERROR: initrd not found"; exit 1; }
-cp "$VMLINUZ" "${ISO_DIR}/casper/vmlinuz"
-cp "$INITRD"  "${ISO_DIR}/casper/initrd"
+
+mkdir -p "${ISO_DIR}/live"
+cp "$VMLINUZ" "${ISO_DIR}/live/vmlinuz"
+cp "$INITRD"  "${ISO_DIR}/live/initrd"
 
 # ── Disk info ─────────────────────────────────────────────────
 mkdir -p "${ISO_DIR}/.disk"
 echo "Velora Linux 0.8" > "${ISO_DIR}/.disk/info"
-echo "full_cd" > "${ISO_DIR}/.disk/cd_type"
 touch "${ISO_DIR}/.disk/base_installable"
 
-# ── GRUB config ───────────────────────────────────────────────
+# ── GRUB ──────────────────────────────────────────────────────
 mkdir -p "${ISO_DIR}/boot/grub"
 
 cat > "${ISO_DIR}/boot/grub/grub.cfg" <<GRUBEOF
@@ -305,67 +486,40 @@ insmod gfxterm
 insmod linux
 insmod normal
 insmod search
-insmod search_label
 insmod search_file
 insmod configfile
 
-# Try to find the ISO by file presence (more reliable than label)
-search --no-floppy --file --set=root /casper/vmlinuz
+search --no-floppy --file --set=root /live/vmlinuz
 
 menuentry "Velora Linux 0.8 (Live)" {
-    search --no-floppy --file --set=root /casper/vmlinuz
-    linux  /casper/vmlinuz boot=casper cdrom-detect/try-usb=true quiet splash ---
-    initrd /casper/initrd
+    search --no-floppy --file --set=root /live/vmlinuz
+    linux  /live/vmlinuz boot=live quiet splash
+    initrd /live/initrd
 }
 
 menuentry "Velora Linux 0.8 (Safe Mode)" {
-    search --no-floppy --file --set=root /casper/vmlinuz
-    linux  /casper/vmlinuz boot=casper cdrom-detect/try-usb=true nomodeset ---
-    initrd /casper/initrd
+    search --no-floppy --file --set=root /live/vmlinuz
+    linux  /live/vmlinuz boot=live nomodeset
+    initrd /live/initrd
 }
 GRUBEOF
-
-# ── Early GRUB config (embedded) ─────────────────────────────
-# This runs BEFORE grub.cfg - ensures modules are loaded
-cat > /tmp/grub-early.cfg <<EARLYEOF
-insmod part_msdos
-insmod part_gpt
-insmod iso9660
-insmod normal
-insmod search
-insmod search_label
-search --no-floppy --label --set=root "VELORA_LINUX"
-set prefix=(\$root)/boot/grub
-normal
-EARLYEOF
 
 # ── Build ISO ─────────────────────────────────────────────────
 echo "[*] Building ISO..."
 mkdir -p "$(pwd)/iso"
 
-# Create embedded GRUB config that auto-loads normal module
-mkdir -p /tmp/grub-embed
-cat > /tmp/grub-embed/grub-early.cfg <<EARLYEOF
-set prefix=(\$root)/boot/grub
-insmod part_msdos
-insmod part_gpt
-insmod iso9660
-insmod normal
-search --no-floppy --label --set=root "VELORA_LINUX"
-set prefix=(\$root)/boot/grub
-normal
-EARLYEOF
-
 grub-mkrescue \
     --output="$(pwd)/iso/${ISO_NAME}" \
-    --modules="part_msdos part_gpt iso9660 linux normal configfile search search_label all_video gfxterm font" \
+    --modules="part_msdos part_gpt iso9660 linux normal configfile search search_label search_file all_video gfxterm font" \
     -volid "VELORA_LINUX" \
     "${ISO_DIR}" \
     2>&1 | tee "$(pwd)/build.log"
 
 if [ -f "$(pwd)/iso/${ISO_NAME}" ]; then
     SIZE=$(du -h "$(pwd)/iso/${ISO_NAME}" | cut -f1)
+    echo "============================================"
     echo "Build complete: iso/${ISO_NAME} (${SIZE})"
+    echo "============================================"
 else
     echo "ERROR: ISO not found."
     exit 1
