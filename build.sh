@@ -436,6 +436,18 @@ HOSTSEOF
 systemctl enable sddm
 systemctl enable NetworkManager
 
+# Fix SDDM session detection
+mkdir -p /usr/share/xsessions
+cat > /usr/share/xsessions/plasma.desktop <<SESSEOF
+[Desktop Entry]
+Type=XSession
+Exec=/usr/bin/startplasma-x11
+TryExec=/usr/bin/startplasma-x11
+DesktopNames=KDE
+Name=Plasma
+Comment=Plasma by KDE
+SESSEOF
+
 # Flatpak
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
 
