@@ -432,6 +432,12 @@ cat > /etc/hosts <<HOSTSEOF
 127.0.1.1 velora
 HOSTSEOF
 
+# Set passwords
+echo "root:velora" | chpasswd
+useradd -m -s /bin/bash velora 2>/dev/null || true
+echo "velora:velora" | chpasswd
+usermod -aG sudo,audio,video,cdrom,plugdev velora
+
 # Create velora user with no password for live session
 useradd -m -s /bin/bash -G sudo,audio,video,cdrom,plugdev,netdev velora
 passwd -d velora
@@ -443,6 +449,14 @@ passwd -d root
 # Enable SDDM
 systemctl enable sddm
 systemctl enable NetworkManager
+
+# Set root password and velora user password
+echo "root:velora" | chpasswd
+# Live user will be created by live-boot automatically
+# But we set a default password just in case
+useradd -m -s /bin/bash velora 2>/dev/null || true
+echo "velora:velora" | chpasswd
+usermod -aG sudo velora 2>/dev/null || true
 
 # Fix SDDM session detection
 mkdir -p /usr/share/xsessions
