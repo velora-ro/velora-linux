@@ -432,6 +432,14 @@ cat > /etc/hosts <<HOSTSEOF
 127.0.1.1 velora
 HOSTSEOF
 
+# Create velora user with no password for live session
+useradd -m -s /bin/bash -G sudo,audio,video,cdrom,plugdev,netdev velora
+passwd -d velora
+echo "velora ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Set root password to empty too
+passwd -d root
+
 # Enable SDDM
 systemctl enable sddm
 systemctl enable NetworkManager
