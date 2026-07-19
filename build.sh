@@ -39,6 +39,10 @@ mount --bind /dev  "${CHROOT_DIR}/dev"
 mount --bind /proc "${CHROOT_DIR}/proc"
 mount --bind /sys  "${CHROOT_DIR}/sys"
 
+# Mount repo inside chroot so build scripts can access assets
+mkdir -p "${CHROOT_DIR}/repo"
+mount --bind "$(pwd)" "${CHROOT_DIR}/repo"
+
 chroot "${CHROOT_DIR}" /bin/bash <<'CHROOT_END'
 set -e
 export DEBIAN_FRONTEND=noninteractive
@@ -376,10 +380,11 @@ SVGEOF
 
 # ── Wallpaper ─────────────────────────────────────────────────
 mkdir -p /usr/share/backgrounds
-wget -q -O /usr/share/backgrounds/velora-wallpaper.jpg \
-    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80" 2>/dev/null || true
-if [ ! -s /usr/share/backgrounds/velora-wallpaper.jpg ]; then
-    # Fallback gradient
+if [ -f "/repo/wallpapers/velora-wallpaper.png" ]; then
+    echo "[*] Using wallpaper from repo..."
+    cp /repo/wallpapers/velora-wallpaper.png /usr/share/backgrounds/velora-wallpaper.jpg
+else
+    echo "[*] Repo wallpaper not found, generating fallback gradient..."
     python3 -c "
 from PIL import Image, ImageDraw
 img = Image.new('RGB', (1920, 1080))
@@ -473,6 +478,68 @@ SESSEOF
 # Flatpak
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
 
+# ── Plymouth Boot Animation ───────────────────────────────────
+echo "[chroot] Installing Plymouth boot animation..."
+apt-get install -y plymouth plymouth-themes
+
+mkdir -p /usr/share/plymouth/themes/velora-plymouth
+cp -r /repo/branding/plymouth/velora-plymouth/. \
+    /usr/share/plymouth/themes/velora-plymouth/
+
+# Set Velora as default Plymouth theme
+update-alternatives --install \
+    /usr/share/plymouth/themes/default.plymouth \
+    default.plymouth \
+    /usr/share/plymouth/themes/velora-plymouth/velora-plymouth.plymouth \
+    100
+update-alternatives --set \
+    default.plymouth \
+    /usr/share/plymouth/themes/velora-plymouth/velora-plymouth.plymouth
+
+# Add splash to kernel cmdline
+sed -i 's|GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"|GRUB_CMDLINE_LINUX_DEFAULT="\1 quiet splash"|' \
+    /etc/default/grub 2>/dev/null || true
+
+KERNEL_VERSION=$(ls /lib/modules/ | sort -V | tail -1)
+[ -n "$KERNEL_VERSION" ] && update-initramfs -u -k "$KERNEL_VERSION" || true
+echo "[chroot] Plymouth installed."
+
+# ── Velora Overlay ───────────────────────────────────────────
+echo "[chroot] Installing Velora Overlay..."
+apt-get install -y python3-pyqt6 ffmpeg lm-sensors python3-pip || true
+pip3 install evdev 2>/dev/null || true
+mkdir -p /usr/share/velora/overlay
+cp /repo/applications/velora-overlay/velora-overlay.py /usr/share/velora/overlay/
+cp /repo/applications/velora-overlay/velora-overlay.desktop /usr/share/applications/
+mkdir -p /etc/skel/.config/autostart
+cp /repo/applications/velora-overlay/velora-overlay.desktop /etc/skel/.config/autostart/
+echo "[chroot] Velora Overlay instalat."
+
+# ── Automatic Security Updates ────────────────────────────────
+echo "[chroot] Configuring automatic security updates..."
+apt-get install -y unattended-upgrades apt-listchanges
+
+# Enable only security updates (not all upgrades)
+cat > /etc/apt/apt.conf.d/50unattended-upgrades <<UUEOF
+Unattended-Upgrade::Allowed-Origins {
+    "Debian:bookworm-security";
+};
+Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+Unattended-Upgrade::MinimalSteps "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Automatic-Reboot-WithUsers "false";
+UUEOF
+
+# Schedule automatic checks daily
+cat > /etc/apt/apt.conf.d/20auto-upgrades <<AUEOF
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+AUEOF
+
+systemctl enable unattended-upgrades
+
 # Cleanup
 apt-get clean
 rm -rf /tmp/* /var/tmp/*
@@ -480,6 +547,7 @@ rm -rf /tmp/* /var/tmp/*
 CHROOT_END
 
 # ── Unmount ───────────────────────────────────────────────────
+umount "${CHROOT_DIR}/repo" || true
 umount "${CHROOT_DIR}/dev"  || true
 umount "${CHROOT_DIR}/proc" || true
 umount "${CHROOT_DIR}/sys"  || true

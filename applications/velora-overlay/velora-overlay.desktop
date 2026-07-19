@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Velora Overlay
+Comment=Performance overlay - CPU/GPU temp, RAM, FPS, Screenshot, Recording
+Exec=python3 /usr/share/velora/overlay/velora-overlay.py
+Icon=/usr/share/velora/icons/velora-overlay.svg
+Terminal=false
+Type=Application
+Categories=System;Monitor;
+Keywords=overlay;fps;temperature;ram;screenshot;recording;
+StartupNotify=false
+X-GNOME-Autostart-enabled=true
