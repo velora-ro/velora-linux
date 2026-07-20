@@ -295,7 +295,7 @@ plugin=org.kde.plasma.kickoff
 PreloadWeight=100
 
 [Containments][1][Applets][2][Configuration][General]
-icon=/usr/share/pixmaps/velora-logo.svg
+icon=/usr/share/pixmaps/velora-logo.png
 useCustomButtonImage=true
 
 [Containments][1][Applets][3]
@@ -373,8 +373,8 @@ HideTitleBar=false
 MenuOpacity=90
 BREEZEEOF
 
-# ── Velora Logo SVG ───────────────────────────────────────────
-mkdir -p /usr/share/pixmaps
+# ── Velora Logo SVG + PNG ─────────────────────────────────────
+mkdir -p /usr/share/pixmaps /usr/share/velora/icons
 cat > /usr/share/pixmaps/velora-logo.svg <<SVGEOF
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
   <rect width="48" height="48" rx="10" fill="#161b18"/>
@@ -382,6 +382,31 @@ cat > /usr/share/pixmaps/velora-logo.svg <<SVGEOF
   <polygon points="14,12 24,28 34,12 28,12 24,22 20,12" fill="#5F9E6E"/>
 </svg>
 SVGEOF
+
+# Converteste SVG in PNG pentru Kickoff
+if command -v convert >/dev/null 2>&1; then
+    convert -background none /usr/share/pixmaps/velora-logo.svg \
+        -resize 48x48 /usr/share/pixmaps/velora-logo.png 2>/dev/null || true
+elif command -v python3 >/dev/null 2>&1; then
+    python3 -c "
+import subprocess
+subprocess.run(['apt-get','install','-y','python3-cairosvg'], capture_output=True)
+try:
+    import cairosvg
+    cairosvg.svg2png(url='/usr/share/pixmaps/velora-logo.svg',
+                     write_to='/usr/share/pixmaps/velora-logo.png', output_width=48, output_height=48)
+except: pass
+" 2>/dev/null || true
+fi
+
+# Fallback: instaleaza imagemagick si converetste
+apt-get install -y imagemagick 2>/dev/null || true
+convert -background none /usr/share/pixmaps/velora-logo.svg \
+    -resize 48x48 /usr/share/pixmaps/velora-logo.png 2>/dev/null || true
+
+cp /usr/share/pixmaps/velora-logo.svg /usr/share/velora/icons/velora-logo.svg
+[ -f /usr/share/pixmaps/velora-logo.png ] && \
+    cp /usr/share/pixmaps/velora-logo.png /usr/share/velora/icons/velora-logo.png || true
 
 # ── Wallpaper ─────────────────────────────────────────────────
 mkdir -p /usr/share/backgrounds
