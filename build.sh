@@ -383,30 +383,23 @@ cat > /usr/share/pixmaps/velora-logo.svg <<SVGEOF
 </svg>
 SVGEOF
 
-# Converteste SVG in PNG pentru Kickoff
-if command -v convert >/dev/null 2>&1; then
-    convert -background none /usr/share/pixmaps/velora-logo.svg \
-        -resize 48x48 /usr/share/pixmaps/velora-logo.png 2>/dev/null || true
-elif command -v python3 >/dev/null 2>&1; then
-    python3 -c "
-import subprocess
-subprocess.run(['apt-get','install','-y','python3-cairosvg'], capture_output=True)
-try:
-    import cairosvg
-    cairosvg.svg2png(url='/usr/share/pixmaps/velora-logo.svg',
-                     write_to='/usr/share/pixmaps/velora-logo.png', output_width=48, output_height=48)
-except: pass
+# Genereaza PNG cu Python direct (fara imagemagick)
+python3 -c "
+from PIL import Image, ImageDraw
+img = Image.new('RGBA', (48, 48), (0, 0, 0, 0))
+draw = ImageDraw.Draw(img)
+# Background rounded rect (aproximat ca dreptunghi)
+draw.rounded_rectangle([0,0,47,47], radius=10, fill=(22,27,24,255))
+# V shape exterior
+draw.polygon([(8,12),(24,36),(40,12),(34,12),(24,28),(14,12)], fill=(47,107,82,255))
+# V shape interior
+draw.polygon([(14,12),(24,28),(34,12),(28,12),(24,22),(20,12)], fill=(95,158,110,255))
+img.save('/usr/share/pixmaps/velora-logo.png')
+print('Logo PNG generat.')
 " 2>/dev/null || true
-fi
 
-# Fallback: instaleaza imagemagick si converetste
-apt-get install -y imagemagick 2>/dev/null || true
-convert -background none /usr/share/pixmaps/velora-logo.svg \
-    -resize 48x48 /usr/share/pixmaps/velora-logo.png 2>/dev/null || true
-
-cp /usr/share/pixmaps/velora-logo.svg /usr/share/velora/icons/velora-logo.svg
-[ -f /usr/share/pixmaps/velora-logo.png ] && \
-    cp /usr/share/pixmaps/velora-logo.png /usr/share/velora/icons/velora-logo.png || true
+cp /usr/share/pixmaps/velora-logo.svg /usr/share/velora/icons/
+[ -f /usr/share/pixmaps/velora-logo.png ] && cp /usr/share/pixmaps/velora-logo.png /usr/share/velora/icons/ || true
 
 # ── Wallpaper ─────────────────────────────────────────────────
 mkdir -p /usr/share/backgrounds
@@ -612,13 +605,13 @@ search --no-floppy --label --set=root "VELORA_LINUX"
 
 menuentry "Velora Linux 0.8 (Live)" {
     search --no-floppy --label --set=root "VELORA_LINUX"
-    linux  /live/vmlinuz boot=live quiet splash
+    linux  /live/vmlinuz boot=live quiet splash plymouth.enable=1
     initrd /live/initrd
 }
 
 menuentry "Velora Linux 0.8 (Safe Mode)" {
     search --no-floppy --label --set=root "VELORA_LINUX"
-    linux  /live/vmlinuz boot=live nomodeset
+    linux  /live/vmlinuz boot=live nomodeset plymouth.enable=0
     initrd /live/initrd
 }
 GRUBEOF
