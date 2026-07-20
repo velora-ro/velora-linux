@@ -67,8 +67,6 @@ KERNEL_VERSION=$(ls /lib/modules/ | sort -V | tail -1)
 echo "[chroot] Installing KDE Plasma..."
 apt-get install -y \
     kde-plasma-desktop \
-    plasma-framework \
-    plasma-workspace \
     sddm \
     sddm-theme-breeze \
     xorg \
