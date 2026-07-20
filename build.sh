@@ -69,13 +69,6 @@ apt-get install -y \
     kde-plasma-desktop \
     plasma-framework \
     plasma-workspace \
-    qml-module-org-kde-plasma-core \
-    qml-module-org-kde-plasma-components \
-    qml-module-org-kde-plasma-components2 \
-    qml-module-org-kde-plasma-components3 \
-    qml-module-qtquick2 \
-    qml-module-qtquick-controls2 \
-    qml-module-qtquick-layouts \
     sddm \
     sddm-theme-breeze \
     xorg \
