@@ -591,15 +591,6 @@ touch "$DONE_FLAG"
 APPLYEOF
 
 chmod +x /usr/share/velora/apply-theme.sh
-echo "[chroot] Installing Velora Overlay..."
-apt-get install -y python3-pyqt6 ffmpeg lm-sensors python3-pip || true
-pip3 install evdev 2>/dev/null || true
-mkdir -p /usr/share/velora/overlay
-cp /repo/applications/velora-overlay/velora-overlay.py /usr/share/velora/overlay/
-cp /repo/applications/velora-overlay/velora-overlay.desktop /usr/share/applications/
-mkdir -p /etc/skel/.config/autostart
-cp /repo/applications/velora-overlay/velora-overlay.desktop /etc/skel/.config/autostart/
-echo "[chroot] Velora Overlay instalat."
 
 # ── Automatic Security Updates ────────────────────────────────
 echo "[chroot] Configuring automatic security updates..."
