@@ -89,12 +89,17 @@ apt-get install -y \
     fonts-cantarell
 
 # ── Brave Browser ─────────────────────────────────────────────
+echo "[chroot] Installing Brave Browser..."
+apt-get install -y curl gnupg apt-transport-https
 curl -fsSL https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg \
-    -o /usr/share/keyrings/brave-browser-archive-keyring.gpg 2>/dev/null || true
-echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main" \
+    -o /usr/share/keyrings/brave-browser-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" \
     > /etc/apt/sources.list.d/brave.list
 apt-get update -q
-apt-get install -y brave-browser || true
+apt-get install -y brave-browser
+# Set Brave as default browser
+update-alternatives --set x-www-browser /usr/bin/brave-browser 2>/dev/null || true
+echo "[chroot] Brave installed."
 
 # ── VeloraForest KDE Theme ────────────────────────────────────
 echo "[chroot] Installing VeloraForest KDE theme..."
@@ -336,17 +341,16 @@ Image=file:///usr/share/backgrounds/velora-wallpaper.jpg
 itemsOnDisabledScreens=
 PANELEOF
 
-# Breeze Dark window decorations
+# Breeze Dark window decorations - buttons on RIGHT
 cat > /etc/skel/.config/kwinrc <<KWINEOF
 [org.kde.kdecoration2]
-ButtonsOnLeft=XIA
-ButtonsOnRight=
+ButtonsOnLeft=
+ButtonsOnRight=IAX
 library=org.kde.breeze
 theme=Breeze
 
 [Windows]
 BorderlessMaximizedWindows=false
-RoundedCorners=true
 
 [Plugins]
 blurEnabled=true
