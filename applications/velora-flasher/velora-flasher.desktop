@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Velora Flasher
+Comment=Flasheaza Velora Linux pe USB sau instaleaza pe PC
+Exec=pkexec python3 /usr/share/velora/flasher/velora-flasher.py
+Icon=/usr/share/velora/icons/velora-logo.png
+Terminal=false
+Type=Application
+Categories=System;
+Keywords=flash;usb;install;velora;
