@@ -514,7 +514,83 @@ KERNEL_VERSION=$(ls /lib/modules/ | sort -V | tail -1)
 [ -n "$KERNEL_VERSION" ] && update-initramfs -u -k "$KERNEL_VERSION" || true
 echo "[chroot] Plymouth installed."
 
-# ── Velora Overlay ───────────────────────────────────────────
+# ── Script autostart pentru logo Kickoff ─────────────────────
+# KDE ignora appletsrc din skel, il setam dupa primul login
+mkdir -p /etc/skel/.config/autostart
+cat > /etc/skel/.config/autostart/velora-apply-theme.desktop <<AUTOEOF
+[Desktop Entry]
+Type=Application
+Name=Velora Apply Theme
+Exec=/usr/share/velora/apply-theme.sh
+Hidden=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+AUTOEOF
+
+mkdir -p /usr/share/velora
+cat > /usr/share/velora/apply-theme.sh <<'APPLYEOF'
+#!/bin/bash
+# Ruleaza o singura data dupa primul login
+DONE_FLAG="$HOME/.velora-theme-applied"
+[ -f "$DONE_FLAG" ] && exit 0
+
+sleep 3  # Asteapta sa porneasca plasma complet
+
+# Seteaza logo-ul Kickoff
+PLASMOID_RC="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+
+if [ -f "$PLASMOID_RC" ]; then
+    # Gaseste sectiunea Kickoff si seteaza logo-ul
+    python3 -c "
+import re, os
+path = os.path.expanduser('~/.config/plasma-org.kde.plasma.desktop-appletsrc')
+with open(path, 'r') as f:
+    content = f.read()
+
+# Cauta sectiunile [General] de sub Kickoff si adauga/modifica icon
+kickoff_section = re.search(r'\[Containments\]\[(\d+)\]\[Applets\]\[(\d+)\]\[Configuration\]\[General\].*?plugin=org\.kde\.plasma\.kickoff', content, re.DOTALL)
+
+# Adauga la fiecare sectiune [General] sub Kickoff
+new_content = re.sub(
+    r'(plugin=org\.kde\.plasma\.kickoff.*?\[Containments\]\[\d+\]\[Applets\]\[\d+\]\[Configuration\]\[General\])',
+    r'\1\nicon=/usr/share/pixmaps/velora-logo.png\nuseCustomButtonImage=true',
+    content, flags=re.DOTALL
+)
+
+# Simplu: inlocuieste sau adauga in orice sectiune [General] care nu are icon
+if 'useCustomButtonImage' not in content:
+    new_content = content + '''
+[Containments][1][Applets][2][Configuration][General]
+icon=/usr/share/pixmaps/velora-logo.png
+useCustomButtonImage=true
+'''
+
+with open(path, 'w') as f:
+    f.write(new_content)
+print('Logo aplicat.')
+" 2>/dev/null || true
+fi
+
+# Metoda directa cu kwriteconfig5
+kwriteconfig5 --file plasma-org.kde.plasma.desktop-appletsrc \
+    --group "Containments" --group "1" --group "Applets" --group "2" \
+    --group "Configuration" --group "General" \
+    --key "icon" "/usr/share/pixmaps/velora-logo.png" 2>/dev/null || true
+
+kwriteconfig5 --file plasma-org.kde.plasma.desktop-appletsrc \
+    --group "Containments" --group "1" --group "Applets" --group "2" \
+    --group "Configuration" --group "General" \
+    --key "useCustomButtonImage" "true" 2>/dev/null || true
+
+# Restarteaza plasmashell ca sa aplice
+kquitapp5 plasmashell 2>/dev/null || true
+sleep 1
+kstart5 plasmashell 2>/dev/null &
+
+touch "$DONE_FLAG"
+APPLYEOF
+
+chmod +x /usr/share/velora/apply-theme.sh
 echo "[chroot] Installing Velora Overlay..."
 apt-get install -y python3-pyqt6 ffmpeg lm-sensors python3-pip || true
 pip3 install evdev 2>/dev/null || true
