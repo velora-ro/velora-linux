@@ -218,16 +218,16 @@ class MiniBar(QWidget):
 def stat_row(label_text, value_text, bar_value=None):
     container = QWidget()
     layout = QVBoxLayout()
-    layout.setContentsMargins(0, 4, 0, 4)
-    layout.setSpacing(3)
+    layout.setContentsMargins(0, 2, 0, 2)
+    layout.setSpacing(2)
 
     top = QHBoxLayout()
     lbl = QLabel(label_text)
-    lbl.setFont(QFont("Inter", 10))
+    lbl.setFont(QFont("Inter", 9))
     lbl.setStyleSheet(f"color: {C_MUTED};")
 
     val = QLabel(value_text)
-    val.setFont(QFont("Inter", 11, QFont.Weight.Bold))
+    val.setFont(QFont("Inter", 10, QFont.Weight.Bold))
     val.setStyleSheet(f"color: {C_TEXT};")
     val.setAlignment(Qt.AlignmentFlag.AlignRight)
 
@@ -287,46 +287,40 @@ class VeloraOverlay(QWidget):
 
     def _build_ui(self):
         root = QVBoxLayout()
-        root.setContentsMargins(8, 8, 8, 8)
+        root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
         self.setLayout(root)
 
-        # Card principal
+        # Card principal - dreptunghi simplu fara shadow
         card = QFrame()
         card.setStyleSheet(f"""
             QFrame {{
-                background-color: rgba(10, 21, 16, 0.95);
-                border-radius: 16px;
-                border: 1px solid rgba(47, 107, 82, 0.4);
+                background-color: rgba(10, 21, 16, 0.98);
+                border: 1px solid rgba(47, 107, 82, 0.6);
             }}
         """)
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(32)
-        shadow.setOffset(0, 4)
-        shadow.setColor(QColor(0, 0, 0, 160))
-        card.setGraphicsEffect(shadow)
 
         card_layout = QVBoxLayout()
-        card_layout.setContentsMargins(16, 14, 16, 14)
-        card_layout.setSpacing(8)
+        card_layout.setContentsMargins(12, 10, 12, 10)
+        card_layout.setSpacing(6)
         card.setLayout(card_layout)
 
-        # Header
+        # Header compact
         header = QHBoxLayout()
+        header.setSpacing(6)
         logo = QLabel("🌲")
-        logo.setFont(QFont("Inter", 14))
+        logo.setFont(QFont("Inter", 11))
         title = QLabel("Velora Overlay")
-        title.setFont(QFont("Inter", 12, QFont.Weight.Bold))
+        title.setFont(QFont("Inter", 11, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C_HIGHLIGHT};")
         close_btn = QPushButton("✕")
-        close_btn.setFixedSize(22, 22)
+        close_btn.setFixedSize(18, 18)
         close_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent;
                 color: {C_MUTED};
                 border: none;
-                font-size: 12px;
-                border-radius: 11px;
+                font-size: 11px;
             }}
             QPushButton:hover {{ background: rgba(220,80,80,0.3); color: {C_DANGER}; }}
         """)
@@ -337,24 +331,24 @@ class VeloraOverlay(QWidget):
         header.addWidget(close_btn)
         card_layout.addLayout(header)
 
-        # Separator
+        # Separator subtire
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet(f"color: rgba(47,107,82,0.3);")
+        sep.setStyleSheet(f"background: rgba(47,107,82,0.3); max-height: 1px;")
         card_layout.addWidget(sep)
-        card_layout.addSpacing(4)
+        card_layout.addSpacing(2)
 
-        # ── Stats ──
+        # ── Stats compacte ──
         # CPU Temp
-        row, self.lbl_cpu_temp, self.bar_cpu_temp = stat_row("CPU Temp", "-- °C", 0)
+        row, self.lbl_cpu_temp, self.bar_cpu_temp = stat_row("CPU", "-- °C", 0)
         card_layout.addWidget(row)
 
         # GPU Temp
-        row, self.lbl_gpu_temp, self.bar_gpu_temp = stat_row("GPU Temp", "-- °C", 0)
+        row, self.lbl_gpu_temp, self.bar_gpu_temp = stat_row("GPU", "-- °C", 0)
         card_layout.addWidget(row)
 
         # CPU Usage
-        row, self.lbl_cpu_pct, self.bar_cpu_pct = stat_row("CPU Usage", "--%", 0)
+        row, self.lbl_cpu_pct, self.bar_cpu_pct = stat_row("CPU%", "--%", 0)
         card_layout.addWidget(row)
 
         # RAM
@@ -365,22 +359,21 @@ class VeloraOverlay(QWidget):
         row_fps, self.lbl_fps, _ = stat_row("FPS", "N/A")
         card_layout.addWidget(row_fps)
 
-        card_layout.addSpacing(8)
+        card_layout.addSpacing(4)
         sep2 = QFrame()
         sep2.setFrameShape(QFrame.Shape.HLine)
-        sep2.setStyleSheet(f"color: rgba(47,107,82,0.3);")
+        sep2.setStyleSheet(f"background: rgba(47,107,82,0.3); max-height: 1px;")
         card_layout.addWidget(sep2)
-        card_layout.addSpacing(6)
+        card_layout.addSpacing(4)
 
-        # ── Butoane ──
+        # ── Butoane patrate simple ──
         btn_style = f"""
             QPushButton {{
-                background: rgba(47,107,82,0.25);
+                background: rgba(47,107,82,0.3);
                 color: {C_TEXT};
-                border: 1px solid rgba(47,107,82,0.4);
-                border-radius: 10px;
-                padding: 8px 12px;
-                font-size: 12px;
+                border: 1px solid rgba(47,107,82,0.5);
+                padding: 6px 10px;
+                font-size: 11px;
                 text-align: left;
             }}
             QPushButton:hover {{
@@ -395,10 +388,9 @@ class VeloraOverlay(QWidget):
             QPushButton {{
                 background: rgba(220,80,80,0.3);
                 color: {C_DANGER};
-                border: 1px solid rgba(220,80,80,0.5);
-                border-radius: 10px;
-                padding: 8px 12px;
-                font-size: 12px;
+                border: 1px solid rgba(220,80,80,0.6);
+                padding: 6px 10px;
+                font-size: 11px;
                 text-align: left;
             }}
             QPushButton:hover {{ background: rgba(220,80,80,0.5); }}
@@ -414,7 +406,7 @@ class VeloraOverlay(QWidget):
         self._btn_record_normal = btn_style
         self._btn_record_active = btn_record_style_active
 
-        self.btn_open_folder = QPushButton("📁  Deschide folderul")
+        self.btn_open_folder = QPushButton("📁  Deschide")
         self.btn_open_folder.setStyleSheet(btn_style)
         self.btn_open_folder.clicked.connect(self.open_folder)
 
@@ -422,16 +414,16 @@ class VeloraOverlay(QWidget):
         card_layout.addWidget(self.btn_record)
         card_layout.addWidget(self.btn_open_folder)
 
-        card_layout.addSpacing(4)
+        card_layout.addSpacing(2)
         self.lbl_status = QLabel("")
-        self.lbl_status.setStyleSheet(f"color: {C_MUTED}; font-size: 10px;")
+        self.lbl_status.setStyleSheet(f"color: {C_MUTED}; font-size: 9px;")
         self.lbl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_status.setWordWrap(True)
         card_layout.addWidget(self.lbl_status)
 
-        # Hint hotkey
-        hint = QLabel("Alt+F12 pentru a ascunde/arăta")
-        hint.setStyleSheet(f"color: rgba(122,158,135,0.5); font-size: 9px;")
+        # Hint
+        hint = QLabel("Alt+F12 ascunde/arata")
+        hint.setStyleSheet(f"color: rgba(122,158,135,0.4); font-size: 8px;")
         hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         card_layout.addWidget(hint)
 
@@ -440,10 +432,10 @@ class VeloraOverlay(QWidget):
     def _position_window(self):
         screen = QApplication.primaryScreen().geometry()
         self.setGeometry(
-            screen.width() - self.width() - 20,
-            80,
+            screen.width() - self.width() - 10,
+            10,
             self.width(),
-            500
+            screen.height() - 20
         )
 
     def _setup_hotkey(self):
