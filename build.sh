@@ -375,31 +375,53 @@ BREEZEEOF
 
 # ── Velora Logo SVG + PNG ─────────────────────────────────────
 mkdir -p /usr/share/pixmaps /usr/share/velora/icons
-cat > /usr/share/pixmaps/velora-logo.svg <<SVGEOF
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
-  <rect width="48" height="48" rx="10" fill="#161b18"/>
-  <polygon points="8,12 24,36 40,12 34,12 24,28 14,12" fill="#2F6B52"/>
-  <polygon points="14,12 24,28 34,12 28,12 24,22 20,12" fill="#5F9E6E"/>
-</svg>
-SVGEOF
 
-# Genereaza PNG cu Python direct (fara imagemagick)
-python3 -c "
-from PIL import Image, ImageDraw
-img = Image.new('RGBA', (48, 48), (0, 0, 0, 0))
-draw = ImageDraw.Draw(img)
-# Background rounded rect (aproximat ca dreptunghi)
-draw.rounded_rectangle([0,0,47,47], radius=10, fill=(22,27,24,255))
-# V shape exterior
-draw.polygon([(8,12),(24,36),(40,12),(34,12),(24,28),(14,12)], fill=(47,107,82,255))
-# V shape interior
-draw.polygon([(14,12),(24,28),(34,12),(28,12),(24,22),(20,12)], fill=(95,158,110,255))
-img.save('/usr/share/pixmaps/velora-logo.png')
-print('Logo PNG generat.')
-" 2>/dev/null || true
+# Genereaza PNG direct cu Python fara dependente externe
+python3 << 'PYEOF'
+try:
+    from PIL import Image, ImageDraw
+    img = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.rounded_rectangle([0,0,63,63], radius=12, fill=(22,27,24,255))
+    draw.polygon([(10,16),(32,48),(54,16),(45,16),(32,37),(19,16)], fill=(47,107,82,255))
+    draw.polygon([(19,16),(32,37),(45,16),(37,16),(32,29),(27,16)], fill=(95,158,110,255))
+    img.save('/usr/share/pixmaps/velora-logo.png')
+    print('Logo PNG generat cu Pillow.')
+except Exception as e:
+    print(f'Pillow failed: {e}')
+    # Fallback: genereaza un PNG simplu fara Pillow
+    import struct, zlib
+    def make_png(w, h, pixels):
+        def chunk(name, data):
+            c = zlib.crc32(name + data) & 0xffffffff
+            return struct.pack('>I', len(data)) + name + data + struct.pack('>I', c)
+        ihdr = struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0)
+        raw = b''
+        for y in range(h):
+            raw += b'\x00'
+            for x in range(w):
+                raw += bytes(pixels[y][x])
+        idat = zlib.compress(raw)
+        return b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', ihdr) + chunk(b'IDAT', idat) + chunk(b'IEND', b'')
+    
+    pixels = [[(22,27,24) for x in range(64)] for y in range(64)]
+    # Deseneaza un V simplu verde
+    for i in range(22):
+        x1 = 10 + i
+        x2 = 54 - i
+        y  = 16 + i
+        if 0 <= x1 < 64 and 0 <= y < 64:
+            pixels[y][x1] = (47,107,82)
+        if 0 <= x2 < 64 and 0 <= y < 64:
+            pixels[y][x2] = (47,107,82)
+    
+    with open('/usr/share/pixmaps/velora-logo.png', 'wb') as f:
+        f.write(make_png(64, 64, pixels))
+    print('Logo PNG generat cu fallback.')
+PYEOF
 
-cp /usr/share/pixmaps/velora-logo.svg /usr/share/velora/icons/
-[ -f /usr/share/pixmaps/velora-logo.png ] && cp /usr/share/pixmaps/velora-logo.png /usr/share/velora/icons/ || true
+cp /usr/share/pixmaps/velora-logo.png /usr/share/velora/icons/velora-logo.png 2>/dev/null || true
+echo "[chroot] Logo PNG: $(ls -lh /usr/share/pixmaps/velora-logo.png 2>/dev/null || echo 'LIPSESTE!')"
 
 # ── Wallpaper ─────────────────────────────────────────────────
 mkdir -p /usr/share/backgrounds
