@@ -614,6 +614,35 @@ APPLYEOF
 
 chmod +x /usr/share/velora/apply-theme.sh
 
+# ── Velora Boot Screen ────────────────────────────────────────
+echo "[chroot] Installing Velora Boot Screen..."
+apt-get install -y python3-pyqt6 || true
+mkdir -p /usr/share/velora/bootscreen
+cp /repo/applications/velora-bootscreen/velora-bootscreen.py \
+    /usr/share/velora/bootscreen/
+
+# Autostart inainte de display manager
+cat > /etc/systemd/system/velora-bootscreen.service <<SVCEOF
+[Unit]
+Description=Velora Boot Screen
+After=network.target
+Before=display-manager.service
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+ExecStartPre=/bin/sleep 2
+ExecStart=/usr/bin/python3 /usr/share/velora/bootscreen/velora-bootscreen.py
+Restart=no
+User=velora
+
+[Install]
+WantedBy=graphical.target
+SVCEOF
+
+systemctl enable velora-bootscreen || true
+echo "[chroot] Boot Screen instalat."
+
 # ── Velora Overlay ────────────────────────────────────────────
 echo "[chroot] Installing Velora Overlay..."
 apt-get install -y python3-pyqt6 ffmpeg lm-sensors python3-pip || true
